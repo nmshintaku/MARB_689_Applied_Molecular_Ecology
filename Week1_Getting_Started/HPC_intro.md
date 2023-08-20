@@ -19,7 +19,7 @@ For more information, consult IT's knowledge base article for Duo: https://u.tam
 For connecting to cluster login nodes from outside the campus, you need to activate Virtual Private Network (VPN) first, then initiate SSH connection to the cluster login nodes.
 
 Download the Cisco AnyConnect client (https://www.cisco.com/c/en_uk/products/security/anyconnect-secure-mobility-client/index.html). Credential entry will be identical to logging into other TAMU resources utilizing CAS authentication.
-<p align="center"> <img src="./VPN.png" width="250" />
+<p align="center"> <img src="./images/VPN.png" width="250" />
 
 
 ### 3. Login to the HPRC environment
@@ -27,21 +27,20 @@ Download the Cisco AnyConnect client (https://www.cisco.com/c/en_uk/products/sec
 #### A. Windows operating system
 
 _Option 1_: Putty (download: https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
-<p align="center"> <img src="./Putty.jpg" width="400" />
 
 1. Input your host name as your login credentials.
 2. Change any appearance settings such as font size or color under the "Appearance" link on the left.
 3. Save the session by clicking "Save".
 4. Click on your newly saved session and press "Open". This will open up a new terminal window.
 5. Input your password (hidden from view) and press Enter. A Duo push notification window will appear.
-<img src="./Putty_login.jpg" width="500" />
+<img src="./images/Putty_login.jpg" width="500" />
 
 _Option 2_: Git Bash (download: https://git-scm.com/)
 
 Instructions on installation: https://www.stanleyulili.com/git/how-to-install-git-bash-on-windows/
 
 1. Open a new Git Bash window.
-<img src="./GitBash.jpg" width="400" />
+<img src="./images/GitBash.jpg" width="400" />
 
 2. Type in:
 ```
