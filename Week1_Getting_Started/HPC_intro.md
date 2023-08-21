@@ -18,7 +18,7 @@ For more information, consult IT's knowledge base article for Duo: https://u.tam
 
 For connecting to cluster login nodes from outside the campus, you need to activate Virtual Private Network (VPN) first, then initiate SSH connection to the cluster login nodes.
 
-Download the Cisco AnyConnect client (https://www.cisco.com/c/en_uk/products/security/anyconnect-secure-mobility-client/index.html). Credential entry will be identical to logging into other TAMU resources utilizing CAS authentication.
+Download the Cisco AnyConnect client https://www.cisco.com/c/en_uk/products/security/anyconnect-secure-mobility-client/index.html . Credential entry will be identical to logging into other TAMU resources utilizing CAS authentication.
 <p align="center"> <img src="./images/VPN.png" width="250" />
 
 
