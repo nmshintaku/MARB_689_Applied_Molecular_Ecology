@@ -134,11 +134,30 @@ echo &quot;Runtime was $runtime&quot;</code></pre><p>In the script, we will chan
 <p>Now its time to execute the script. This is as simple as&quot;</p>
 <pre><code>sbatch test.sh</code></pre><p>This script will finish before we can even check its run status. Let&apos;s try anyways. Type in <code>squeue -u &lt;NETID&gt;</code>.</p>
 <p>Recap on important commands to submit jobs on the cluster.</p>
-<p>|Commands    |Syntax    |Description|
-|--|--|
-|sbatch | sbatch <job-id>|Submit a batch script to Slurm for processing.|
-|squeue | squeue -u | Show information about your job(s) in the queue. The command when run without the -u flag, shows a list of your job(s) and all other jobs in the queue.|
-|skill/scancel|scancel <job-id>|End or cancel a queued job.|</job-id></job-id></p>
+<table>
+<thead>
+<tr>
+<th>Commands</th>
+<th>Syntax</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sbatch</td>
+<td>sbatch <job-id></job-id></td>
+<td>Submit a batch script to Slurm for processing.</td>
+</tr>
+<tr>
+<td>squeue</td>
+<td>squeue -u</td>
+<td>Show information about your job(s) in the queue. The command when run without the -u flag, shows a list of your job(s) and all other jobs in the queue.</td>
+</tr>
+<tr>
+<td>skill/scancel</td>
+<td>scancel <job-id></job-id></td>
+<td>End or cancel a queued job.</td>
+</tr>
+</tbody></table>
 <h4 id="additional-useful-information-on-job-submission-on-the-grace-cluster">Additional useful information on job submission on the Grace Cluster</h4>
 <p>Documentation on all things relevant to using the Grace HPRC are provided at <a href="https://hprc.tamu.edu/wiki/Grace:Batch">https://hprc.tamu.edu/wiki/Grace:Batch</a>.</p>
 <h3 id="let-s-practice-a-couple-more-basic-commands">Let&apos;s practice a couple more basic commands</h3>

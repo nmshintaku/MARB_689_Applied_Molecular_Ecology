@@ -149,7 +149,7 @@ This script will finish before we can even check its run status. Let's try anywa
 Recap on important commands to submit jobs on the cluster.
 
 |Commands	|Syntax	|Description|
-|--|--|
+|--|--|--|
 |sbatch | sbatch <job-id>|Submit a batch script to Slurm for processing.|
 |squeue | squeue -u | Show information about your job(s) in the queue. The command when run without the -u flag, shows a list of your job(s) and all other jobs in the queue.|
 |skill/scancel|scancel <job-id>|End or cancel a queued job.|
