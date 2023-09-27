@@ -1,0 +1,10 @@
+# libraries for Case Study 2
+.libPaths("/scratch/group/kitchen-group/Rlibs")
+library(adegenet)
+library(poppr)
+library(hierfstat)
+library(ggplot2)
+library(tidyverse)
+library(reshape2)
+library(gplots)
+library(StAMPP)

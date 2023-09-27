@@ -1,0 +1,282 @@
+---
+title: 'Case Study 2: Gene Flow and Mating'
+author: "Sheila Kitchen"
+output: pdf_document
+date: '2023-09-13'
+---
+
+```{r setup, include=FALSE}
+.libPaths("/scratch/group/kitchen-group/Rlibs")
+knitr::opts_knit$set(root.dir="/scratch/group/kitchen-group/class_working_directories")
+```
+
+### Load tools
+
+For this session, we need to load several packages designed to handle variant data (SNP or mSats), matrices, and plotting.
+
+```{r load packages, message=FALSE, warning=FALSE}
+#Required R-packages for this case study
+library(adegenet)
+library(poppr)
+library(hierfstat)
+library(ggplot2)
+library(tidyverse)
+library(reshape2)
+library(gplots)
+library(StAMPP)
+```
+
+### Change working directory
+
+To identify your current directory type:
+
+```{r}
+getwd()
+```
+
+This should by default be your home directory. Let's change that to your class working directory. *Note*- change `kitchens` to your directory name before executing the block of code below.
+
+```{r}
+#setwd("/scratch/group/kitchen-group/class_working_directories/kitchens/")
+```
+
+Now check your working directory again.
+
+### Import Data
+
+Today we will continue explore population genetic processes using microsatellite genotype data from a sea fan, *Eunicella verrucosa* ([Holland et al. 2017](https://www.nature.com/articles/hdy201714)).
+
+Import the genepop file of microsatellite data to convert to `genind` object :
+
+```{r import}
+#Read in file
+seafan_gen <- import2genind("/scratch/group/kitchen-group/04_geneFlow/Pinkseafan_13MicrosatLoci.gen", ncode = 3, quiet = TRUE)
+```
+
+To look at the three random samples for locus "Ever002", run:
+
+```{r}
+tab(seafan_gen[loc = "Ever002"])[runif(3, 1, nInd(seafan_gen)), ]
+```
+
+To see all the information in the `genind` object:
+
+```{r}
+seafan_gen
+```
+
+This new data type, the `genind` object, is an object meant for efficiently working with the genotype data with minimal memory overhead. Individual genotypes are stored in a list with several components. For example, the 13 locus names and corresponding allele variants under each locus can be found by typing in:
+
+```{r}
+seafan_gen@all.names
+```
+
+If we want to see the number of samples collected at each field site, we can type:
+
+```{r}
+summary(seafan_gen@pop)
+```
+
+We will update the site labels as so:
+
+```{r}
+popNames(seafan_gen)
+popNames(seafan_gen) = gsub("[^a-zA-Z]", "", popNames(seafan_gen))
+popNames(seafan_gen)
+```
+
+What changed between the original and modified labels??
+
+### Filter data
+
+We want remove loci that have greater than 20% missing data.
+
+```{r}
+seafan_gen <- missingno(seafan_gen, type = "loci", cutoff = 0.20)
+```
+
+How many missing values were found?
+
+How many loci were removed at this threshold?
+
+Next, let's filter on individuals with many missing genotypes. Again we will set the threshold to 20%:
+
+```{r}
+seafan_gen <- missingno(seafan_gen, type = "geno", cutoff = 0.20)
+```
+
+How many individuals were removed at this stage? <br> <br>
+
+Let's see what our genind object looks like now:
+
+```{r}
+seafan_gen    
+```
+
+### How many unique individuals do I have?
+
+We can use the `mlg` function in the poppr package to calculate the number of unique multilocus genotypes (MLG) present in the data set.
+
+```{r}
+mlg(seafan_gen)
+```
+
+Were any duplicates (i.e., clone mates) found? <br> <br>
+
+Let's remove those duplicates. We will identify the duplicates and randomly sample which one to remove.
+
+```{r}
+dups_seafan <- mlg.id(seafan_gen)
+dups <- list() 
+for (i in dups_seafan){ # for each element in the list object
+  if (length(dups_seafan[i]) > 1){ # if the length is greater than 1
+  dups<-sample(paste((print(i))),1) # randomly sample one of the duplicates to remove
+  }
+}
+dups
+```
+
+Now, remove that duplicate:
+
+```{r}
+seafan_gen<-seafan_gen[indNames(seafan_gen)!= dups,]
+```
+
+### Common metrics to describe alleles and genotypes within a population
+
+Recall that last class we looked at three of the four evolutionary forces that control allele frequencies within populations: **mutation, natural selection, and genetic drift**. We did not look at **gene flow,** or the introduction of new genetic material from one population to another. Gene flow is also known as migration, where individuals can either move into (immigrate) or move out (emigrate) of a populations.
+
+The function `basic.stats` below will estimates individual counts, allelic frequencies, observed heterozygosities and genetic diversity per locus and population. Also, estimates Fst (fixation index) as well as Fis (inbreeding estimate) following Nei (1987) per locus and overall loci. We will look at each of these
+
+```{r}
+basic_seafan <- basic.stats(seafan_gen, diploid = TRUE)
+```
+
+Let's plot out observed and expected heterozygosities for all loci.
+
+```{r}
+het<-basic_seafan$perloc
+hetm<-melt(het)
+ggplot(hetm %>% filter(variable == c("Ho","Hs")), aes(x=variable, y=value)) + geom_boxplot(fill="#47A8BD") + xlab("") + ylab("Heterozygosity estimates") + theme_bw()+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14))
+```
+
+Here we find evidence of lower observed heterozygosity compared to expected. This suggests that the genetic variability of the sea fan samples is low. What might cause lower heterozygosity in a population?
+
+Let's compare observed and expected heterozygosity by population:
+
+```{r}
+# observed het.
+popHo<-as.data.frame(Ho(seafan_gen, diploid = TRUE))
+popHo$pop <- row.names(popHo)
+colnames(popHo)<-c("Ho","pop")
+
+# expected het.
+popHe<-as.data.frame(Hs(seafan_gen, diploid = TRUE))
+popHe$pop <- row.names(popHe)
+colnames(popHe)<-c("He","pop")
+
+# join the two tables
+HoHe<- popHo %>% left_join(popHe, by="pop") %>% melt(id.vars = "pop")
+
+# plot both
+ggplot(HoHe %>% arrange(value), aes(x=value, y=pop, group=variable, color=variable)) + geom_point() + xlab("") + ylab("Heterozygosity estimates") + theme_bw()+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14))
+```
+
+### Non-Random Mating
+
+Non-random mating (including sexual selection) does not directly affect allele frequencies, but can influence genotype frequencies within populations. Selfing and inbreeding are the most common deviations from random mating (and hence Hardy-Weinberg Equilibrium) that we encounter in natural populations. Inbreeding is defined, sensu stricto, as mating between two related individuals. This ranges from complete selfing, where one parent alone produces offspring, to consanguineous mating, where individuals with some degree of relatedness produce offspring.
+
+The primary consequence of inbreeding is a reduction in the frequency of the heterozygous genotype. Consider the following Punnet square where a heterozygote is producing a selfed offspring. The offspring in the next generation are only 50% heterozygotes. Each generation of selfing, homozygotes produce homozygotes but only half of the offspring from heterozygotes stay as such. This process increases the relative frequency of homozygous genotypes in the population, though if you look at the offspring, the frequency of alleles do not change---there are as many A alleles as B alleles in the next generation of selfing.
+
+From our prior estimates of Ho and He we can estimate inbreeding as, Fis = 1- Ho/He. This is the proportion of the variance in the subpopulation contained in an individual. Let's plot the Fis estimates for the sea fans.
+
+```{r}
+# Fis
+fis<-basic_seafan$Fis
+fism<-melt(as.data.frame(fis))
+ggplot(fism, aes(x=value, y=variable, color=variable)) + geom_boxplot() +
+  geom_jitter(color="black", size=0.4, alpha=0.2) + xlab("") + ylab("Fis estimates") + theme_bw()+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14)) 
+```
+
+### Evidence of Gene Flow
+
+Fst, also known as the **fixation index**, is an extremely important statistic in population genetics, molecular ecology and evolutionary biology. It is also arguably one of the most famous population genetic statistics you will encounter. It measures genetic differentiation between two or more populations by computing average pairwise distances between pairs of individuals based on allele frequencies. Population comparisons of Fst are then considered the "difference" between allele frequencies of two or more populations. The values range from 0 to 1, where zero is when the allele frequencies are identical in the two species/populations whereas a value of one implies that all genetic variation is explained by the population structure ("fixed" difference). Practically speaking, Fst values are never as high as 1 because these values are only utilized to measure breeding between populations of the same species. Different populations of the same species by definition would show some evidence of interbreeding, even if that breeding may no longer occur today.
+
+We calculated the matrices of Nei's distances among individuals and populations.
+
+```{r nei}
+x2 <- as.matrix(seafan_gen) #convert genlight object to matrix 
+sample <- row.names(x2)
+
+ploidy <- ploidy(seafan_gen) #extract ploidy info from genlight object 
+x2 = x2 * (1/ploidy) #convert allele counts to frequency 
+x2[is.na(x2)] = NaN 
+format <- vector(length = length(sample))
+#format id for the genotype data
+format[1:length(format)] = "freq" 
+
+pop.names <- as.data.frame(pop(seafan_gen))
+
+x.stampp <- as.data.frame(cbind(sample, pop.names, ploidy, format, x2)) #convert to basic r data.frame suitable to stamppConvert 
+
+geno <- stamppConvert(x.stampp, 'r') 
+
+### Calculate Nei's distances between individuals/pops
+D.ind <- stamppNeisD(geno, pop = FALSE) # Nei's distance between indivs
+colnames(D.ind) <- rownames(D.ind)
+head(D.ind[0:6,0:6])
+#write.table(D.ind, file="individual_fst.txt")
+```
+
+One way of visualizing the difference in Fst is to make a heat map of the distances. These plots generally order samples based on something like a [hierarchical clustering](https://en.wikipedia.org/wiki/Hierarchical_clustering) to put similar samples next to each other.
+
+```{r fst heatmap}
+### heatmap of the individual distance matrix
+heatmap.2(D.ind, trace="none", cexRow=0.8, cexCol=0.8)
+#dev.off()
+```
+
+We now take an average for the allele frequency from a given population and calculate the pairwise distances between the different populations. Recall that we have `pop` information (where the sea fans were collected) as the factor that determines the population identity.
+
+```{r fstpop}
+D.pop <- stamppNeisD(geno, pop = TRUE) # Nei's 1972 distance between pops
+colnames(D.pop) <- rownames(D.pop)
+D.pop[1:10,1:10]
+#write.table(D.ind, file="population_fst.txt")
+```
+
+Plot Fst between populations:
+
+```{r}
+Dmat<-as.data.frame.table(D.pop)  
+
+Dmat2 <-Dmat %>%  dplyr::filter(Dmat$Freq > 0) %>% dplyr::group_by(Freq) %>% dplyr::slice(1)
+
+mid = mean(Dmat2$Freq)
+mid
+
+ggplot(data = Dmat2, aes(x = Var1, y = Var2, fill = Freq))+
+  geom_tile(colour = "black")+
+  geom_text(aes(label = Freq), color="black", size = 2) +
+  scale_fill_gradient2(low = "blue", mid = "pink", high = "red", midpoint = mid, limits = c(0, max(Dmat2$Freq)), breaks = c(0, 0.009, 0.02,max(Dmat2$Freq)))+
+  scale_x_discrete(expand = c(0,0))+
+  scale_y_discrete(expand = c(0,0), position = "right")+
+  theme(axis.text = element_text(colour = "black", size = 7, face = "bold"),
+        axis.text.x=element_text(angle = 30, vjust = 1.1, hjust=1),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "right",
+        legend.title = element_text(size = 10, face = "bold"),
+        legend.text = element_text(size = 10)
+        )
+```
+
+Which populations are genetically similar? <br> <br>
+
+Which populations are highly differentiated from the rest? <br> <br>
+
+If you've gotten this far, press the 'knit' button at the top of screen. Then, save the PDF you just made from the HPRC to your computer. You can also download files following the instructions here: <https://hprc.tamu.edu/wiki/HPRC:File_Transfers>. Email me the PDF to complete the assignment.
