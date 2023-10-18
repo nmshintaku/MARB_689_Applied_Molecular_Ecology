@@ -1,0 +1,19 @@
+Strain_ID	Ocean
+Van556	Pacific Ocean
+RCC1253	Japanese coast
+RCC4030	South East Pacific
+PLYM217/CCMP1516	Pacific Ocean
+PLYM202	South Pacific
+CCMP371	Sargasso Sea
+RCC4028	South East Pacific
+RCC4002	South East Pacific
+RCC1216	Tasman Sea
+PLYM219/NZEH	South Pacific
+PLY92A	English Channel
+L	Oslo Fjord
+CS-369	Tasman Sea
+CCMP3266	Tasman Sea
+BOF92	North Atlantic
+RCC174	English Channel
+RCC1217	Tasman Sea
+
