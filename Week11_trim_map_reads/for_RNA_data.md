@@ -165,7 +165,7 @@ I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam
 # remove duplicates
 java -Xmx16g -jar $EBROOTPICARD/picard.jar MarkDuplicates \
 TMP_DIR=${DIR}/${USER}/ \
-I=${DIR}/${USER}/${SAMPLE}_aligned.bam \
+I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
 O=${DIR}/${USER}/${SAMPLE}_dedup.bam \
 METRICS_FILE=${DIR}/${USER}/${SAMPLE}_dedup.metrics_test.txt \
 REMOVE_DUPLICATES=false \

@@ -151,19 +151,20 @@ DIR=/scratch/group/kitchen-group/class_working_directories
 USER=kitchens
 SAMPLE=
 
-#sort the file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar \
-SortSam INPUT=${DIR}/${USER}/${SAMPLE}_aligned.sam \
-OUTPUT=${DIR}/${USER}/${SAMPLE}_aligned.bam SORT_ORDER=coordinate
+# add read group and sort the file
+java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
+I=${DIR}/${USER}/${SAMPLE}_Aligned.out.sam O=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
+SO=coordinate \
+RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
 
-#index the resulting bam file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar \
-BuildBamIndex I=${DIR}/${USER}/${SAMPLE}_aligned.bam
+# index the resulting bam file
+java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
+I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam
 
 #remove duplicates
 java -Xmx16g -jar $EBROOTPICARD/picard.jar \
 MarkDuplicates TMP_DIR=${DIR}/${USER}/ \
-I=${DIR}/${USER}/${SAMPLE}_aligned.bam \
+I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
 O=${DIR}/${USER}/${SAMPLE}_dedup.bam \
 METRICS_FILE=${DIR}/${USER}/${SAMPLE}_dedup.metrics_test.txt \
 REMOVE_DUPLICATES=false \
