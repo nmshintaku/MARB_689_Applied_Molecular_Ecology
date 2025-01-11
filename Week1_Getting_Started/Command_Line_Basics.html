@@ -34,16 +34,20 @@ August 23, 2023</p>
 <h3 id="now-what-">Now what?</h3>
 <p>Let&apos;s figure out where you are. Type in <code>pwd</code> at the command prompt. What does it say?</p>
 <p>Now let&apos;s navigate to our shared group space:</p>
-<pre><code>cd /scratch/group/kitchen-group</code></pre><p><em>cd= change directory</em></p>
+<pre><code>cd /scratch/group/kitchen-group/MARB_689_Molecular_Ecology</code></pre><p><em>cd= change directory</em></p>
 <p>Next, we will see what is here. Type <code>ll</code> at the command prompt. What do you see?</p>
-<p>What do the colors signify?
+<p>Now type <code>ls</code>. How is this different than <code>ll</code>?</p>
+<p>Now type <code>ls -ltr</code></p>
+<h3 id="colors-what-do-they-mean-">Colors, what do they mean?</h3>
+<p>Let&apos;s navigate to the directory <code>02_mitogenome</code>. How would we get there from our current directory? How many folders do we need to navigate past?</p>
+<p>When you want to move up one directory, type <code>../</code>.</p>
+<p>Can we figure out what the colors signify?
 Blue =
 Green =
 White =
 Red =
 Cyan =</p>
-<p>Now type <code>ls</code>. How is this different than <code>ll</code>?</p>
-<p>Now type <code>ls -ltr</code></p>
+<h3 id="making-directories">Making directories</h3>
 <p>Navigate into the directory <code>class_working_directories</code>. What&apos;s in there?</p>
 <p>Let&apos;s create a subdirectory for your class results here. Use your <strong>NETID</strong> as the subdirectory name.</p>
 <pre><code>mkdir kitchens</code></pre><p><em>mkdir= make directory</em></p>
@@ -110,7 +114,7 @@ Cyan =</p>
 </tr>
 </tbody></table>
 <ol start="3">
-<li><p>Load any dependencies, if needed (not in this example).</p>
+<li><p>Load any dependencies, if needed (none in this example).</p>
 </li>
 <li><p>The jobs to run:</p>
 </li>
@@ -189,7 +193,7 @@ echo &quot;Runtime was $runtime&quot;</code></pre><p>In the script, we will chan
 <pre><code>cd</code></pre><p>In your home directory, type:</p>
 <pre><code>nano .bashrc</code></pre><ol start="2">
 <li><p>Under &apos;User specific aliases and functions&apos;, add:</p>
-<pre><code>alias class=&apos;cd /scratch/group/kitchen-group/class_working_directories/&lt;NETID&gt;&apos;</code></pre></li>
+<pre><code>alias class=&apos;cd /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/&lt;NETID&gt;&apos;</code></pre></li>
 <li><p>Save your changes (ctrl + o, enter) and close (ctrl + x) the nano window.</p>
 </li>
 </ol>

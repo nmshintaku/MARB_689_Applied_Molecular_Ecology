@@ -24,22 +24,30 @@ Let's figure out where you are. Type in `pwd` at the command prompt. What does i
 
 Now let's navigate to our shared group space:
 ```
-cd /scratch/group/kitchen-group
+cd /scratch/group/kitchen-group/MARB_689_Molecular_Ecology
 ```
 _cd= change directory_
 
 Next, we will see what is here. Type `ll` at the command prompt. What do you see?
 
-What do the colors signify?
+Now type `ls`. How is this different than `ll`?
+
+Now type `ls -ltr`
+
+### Colors, what do they mean?
+
+Let's navigate to the directory `02_mitogenome`. How would we get there from our current directory? How many folders do we need to navigate past?
+
+When you want to move up one directory, type `../`.
+
+Can we figure out what the colors signify?
 Blue =
 Green =
 White =
 Red =
 Cyan =
 
-Now type `ls`. How is this different than `ll`?
-
-Now type `ls -ltr`
+### Making directories
 
 Navigate into the directory `class_working_directories`. What's in there?
 
@@ -112,7 +120,7 @@ These SBATCH commands are also know as SBATCH directives and must be preceded wi
 |Memory Per Node	|--mem=value[K\|M\|G\|T]	|
 |Combined stdout/stderr	|--output=[OutputName].%j	|
 
-3. Load any dependencies, if needed (not in this example).
+3. Load any dependencies, if needed (none in this example).
 
 4. The jobs to run:
 
@@ -218,7 +226,7 @@ nano .bashrc
 
 2. Under 'User specific aliases and functions', add:
 ```
-alias class='cd /scratch/group/kitchen-group/class_working_directories/<NETID>'
+alias class='cd /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/<NETID>'
 ```
 
 3. Save your changes (ctrl + o, enter) and close (ctrl + x) the nano window.
