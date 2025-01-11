@@ -22,13 +22,14 @@
 </style>
 </head>
 <body><div id="readme" class="container"><article class="markdown-body entry-content"><h1 id="the-basics-of-command-line"><strong>The Basics of Command Line</strong></h1>
-<p>August 23, 2023</p>
+<p>Updated: January 11, 2025
+August 23, 2023</p>
 <h3 id="let-s-login">Let&apos;s Login</h3>
 <p>Either in the terminal (Mac) or GitBash interface (PC), please type in:</p>
 <pre><code>ssh &lt;NETID&gt;@grace.hprc.tamu.edu</code></pre><p>If you are using Putty, you may have already saved your configuration. In that case, click on the &quot;Open&quot; button. *<em>see prior HPC Intro document for guidance</em></p>
-<p>Input your TAMU password (hidden from view) and press Enter. A Duo push notification window will appear.</p>
+<p>Input your TAMU password (hidden from view) and press Enter. A Duo push notification window will appear on your phone. Click the green button to accept.</p>
 <h3 id="you-re-in-">You&apos;re in!!!</h3>
-<h3 id="so-what-s-the-difference-between-terminal-and-command-line-anyway-">So what&apos;s the difference between terminal and command line anyway?</h3>
+<h3 id="so-what-s-the-difference-between-the-terminal-and-command-line-anyway-">So what&apos;s the difference between the terminal and command line anyway?</h3>
 <p>Generally, you&apos;ll find these two terms used interchangeably. Technically, a terminal is a software that starts and connects to a shell. A shell is your session and session environment (where things like the prompt and shortcuts might be customized). The command line is the literal line where you enter commands and the cursor blinks.</p>
 <h3 id="now-what-">Now what?</h3>
 <p>Let&apos;s figure out where you are. Type in <code>pwd</code> at the command prompt. What does it say?</p>
@@ -169,7 +170,7 @@ echo &quot;Runtime was $runtime&quot;</code></pre><p>In the script, we will chan
 <em>head = print N top number of lines, default is 10 lines</em>
 <em>tail = like head, but the bottom N lines</em>
 <em>| = called a pipe, allows you to string together two commands like zcat and head in this example</em></p>
-<p><strong>DO NOT RUN:</strong> To completely uncompress the file we could run <code>gunzip filename</code> and to recompress it <code>gzip filename</code>. These are not the only compression tool options. You may encounter .zip, tar.gz or .bz files in the future. That sounds like a future problem to solve, right?</p>
+<p><strong>DO NOT RUN:</strong> To completely un-compress the file we could run <code>gunzip filename</code> and to re-compress it we would run <code>gzip filename</code>. These are not the only compression tool options available. You may encounter <code>.zip</code>, <code>tar.gz</code> or <code>.bz</code> files in the future. That sounds like a future problem to solve, right?</p>
 <p><code>zcat</code> is a version of <code>cat</code>, or concatenate. This command will read the data from the file and output it to screen. It can also be used to join two or more files from top to bottom. For example, <code>cat fileA fileB &gt; fileAB</code>.</p>
 <p>The <code>&gt;</code> will write out whereas the <code>&lt;</code> will read in to the command you are writing. See example above of how we combined two file into a new file called <code>fileAB</code>.</p>
 <p>It can be very useful to quickly screen a file for a string or pattern. To do this we will use <code>grep</code>.</p>

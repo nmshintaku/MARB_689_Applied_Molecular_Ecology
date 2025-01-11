@@ -1,4 +1,5 @@
 # **The Basics of Command Line**
+Updated: January 11, 2025
 August 23, 2023
 
 ### Let's Login
@@ -10,11 +11,11 @@ ssh <NETID>@grace.hprc.tamu.edu
 ```
 If you are using Putty, you may have already saved your configuration. In that case, click on the "Open" button. *_see prior HPC Intro document for guidance_
 
-Input your TAMU password (hidden from view) and press Enter. A Duo push notification window will appear.
+Input your TAMU password (hidden from view) and press Enter. A Duo push notification window will appear on your phone. Click the green button to accept.
 
 ### You're in!!!
 
-### So what's the difference between terminal and command line anyway?
+### So what's the difference between the terminal and command line anyway?
 
 Generally, you'll find these two terms used interchangeably. Technically, a terminal is a software that starts and connects to a shell. A shell is your session and session environment (where things like the prompt and shortcuts might be customized). The command line is the literal line where you enter commands and the cursor blinks.
 
@@ -171,7 +172,7 @@ _head = print N top number of lines, default is 10 lines_
 _tail = like head, but the bottom N lines_
 _| = called a pipe, allows you to string together two commands like zcat and head in this example_
 
-**DO NOT RUN:** To completely uncompress the file we could run `gunzip filename` and to recompress it `gzip filename`. These are not the only compression tool options. You may encounter .zip, tar.gz or .bz files in the future. That sounds like a future problem to solve, right?
+**DO NOT RUN:** To completely un-compress the file we could run `gunzip filename` and to re-compress it we would run `gzip filename`. These are not the only compression tool options available. You may encounter `.zip`, `tar.gz` or `.bz` files in the future. That sounds like a future problem to solve, right?
 
 `zcat` is a version of `cat`, or concatenate. This command will read the data from the file and output it to screen. It can also be used to join two or more files from top to bottom. For example, `cat fileA fileB > fileAB`.
 
