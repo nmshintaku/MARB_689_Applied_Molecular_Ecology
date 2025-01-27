@@ -1,16 +1,16 @@
 ## MARB 689 Case Study 1: What are mitochondrial markers/genomes good for?
-August 30, 2023
+January 27, 2025
 
 #### NAME:
 
 ### Identify a unknown specimen based on mtDNA sequences
 Last week your colleague sent back assembled mitochondrial genomes from a collaborative whole genome sequencing project you started last year. The problem is your colleague mixed up the sequencing barcodes and now its unclear what specimen each mitogenome belongs to. They hope you can help sort this out.
 
-So, where to begin? What mitochondrial markers could be helpful to determine whose who? Why?
+1. So, where to begin? What mitochondrial markers could be helpful to determine whose who? Why?
 <br/>
 <br/>
 
-Pick one of the three mitochondrial genomes in `02_mitogenome` directory. Circle:   A   B   C  
+2. Pick one of the three mitochondrial genomes in `02_mitogenome` directory. Circle:   A   B   C  
 
 To test the marker(s) you identified above, let's annotate your chosen mitogenome. In your `class_working_directory`, copy over the `annotate.sh` batch script from the `02_mitogenome` in the group space. Open that script using the text editor `nano` and change the defined variables at the top of the script.
 
@@ -22,7 +22,9 @@ SPECIMEN=A
 
 Once you've updated the variables, execute the script. (**hint**- sbatch \<scriptName>)
 
-What type of files did this job produce? What directory are they stored in? (**hint**- look up the tool used to see what files it produces)
+3. a) What type of files did this job produce?
+   b) What directory are they stored in?
+   (**hint**- look up the tool used to see what files it produces)
 <br/>
 <br/>
 <br/>
@@ -32,7 +34,7 @@ Pull out one of the mitochondrial marker genes you identified above using `grep`
 
 Let's see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the `blast_nt.sh` script from the `02_mitogenome` directory into your working directory and modify the header with the requested information. Then, execute the script.
 
-What type of file did this job produce?
+4. What type of file did this job produce?
 <br/>
 <br/>
 
@@ -46,36 +48,36 @@ _tblastn_ - protein query against translated nucleotide database
 
 Online version of BLAST can be found here: https://blast.ncbi.nlm.nih.gov/Blast.cgi
 
-Based on the BLAST report, what is the closest organism that your sequence matched in the nt database?
+5. a) Based on the BLAST report, what is the closest organism that your sequence matched in the nt database?
 <br/>
 
-What is the Max Score of the top hit?
+b) What is the Max Score of the top hit?
 <br/>
 
-What is Query Coverage of the top hit?
+c) What is Query Coverage of the top hit?
 <br/>
 
-What is the Percent Identity of the top hit?
+d) What is the Percent Identity of the top hit?
 <br/>
 
-What is the E-value? Is this considered a good E-value?
+e) What is the E-value? Is this considered a good E-value?
 <br/>
 
 
-Try another mitochondrial gene. Do the results converge on the same top hit? If not, why do you think this could happen?
-<br/>
-<br/>
-
-Which marker are you more confident for your taxonomic assignment? Why?
+6. Try another mitochondrial gene. Do the results converge on the same top hit? If not, why do you think this could happen?
 <br/>
 <br/>
 
-Does it appear that the mitochondrial genome of this specimen is present in the nt database?
+7. Which marker are you more confident for your taxonomic assignment? Why?
+<br/>
+<br/>
+
+8. Does it appear that the mitochondrial genome of this specimen is present in the nt database?
 <br/>
 <br/>
 
 ### Pros and Cons of mitochondrial markers and mitogenomic analyses
-Now that you've worked with mitochondrial markers, list 3 pros and 3 cons of using mitochondrial markers in the space below. For each, put a literature reference to support your point.
+9. Now that you've worked with mitochondrial markers, list 3 pros and 3 cons of using mitochondrial markers in the space below. For each, put a literature reference to support your point.
 
 Pro 1:
 <br/>
@@ -122,12 +124,12 @@ Now, check the parameters for the assembler NovoPlasty on GitHub: https://github
 
 Once you've set up the script and configuration file with your variables/parameters, execute the `Assemble.sh` script.
 
-How does the sampled assembled mitogenome you produced compare to the assembly from all reads?
+10. How does the sampled assembled mitogenome you produced compare to the assembly from all reads?
 <br/>
 <br/>
 <br/>
 <br/>
-How does it compare to the reference mitogenome? What are the number of variants (mutations)?
+11. How does it compare to the reference mitogenome? What are the number of variants (mutations)?
 <br/>
 <br/>
 <br/>
