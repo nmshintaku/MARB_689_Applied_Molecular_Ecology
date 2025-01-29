@@ -48,23 +48,22 @@ b) What directory are they stored in?
 
 </li>
 </ol>
-<p>Pull out one of the mitochondrial marker genes you identified above using <code>grep</code>. See prior notes for examples on how to use grep to match strings in the output. Create a new <code>.fa</code> file to paste the sequence(s) in.</p>
-<p>Let&apos;s see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the <code>blast_nt.sh</code> script from the <code>02_mitogenome</code> directory into your working directory and modify the header with the requested information. Then, execute the script.</p>
-<ol start="4">
-<li>What type of file did this job produce?<br>
-<br>
-
-</li>
-</ol>
+<p>Pull out one of the mitochondrial marker genes you identified above using <code>grep</code>. (<strong>hint</strong>- navigate to <code>/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/[netID]/[A/B/C]_unknown/[A/B/C]_unknown_MitoFinder_mitfi_Final_Results</code> to find the gene predictions).See prior notes for examples on how to use <code>grep</code> to match strings in the output. Create a new <code>.fa</code> file to paste the sequence(s) in.</p>
+<p>Let&apos;s see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the <code>blast_nt.sh</code> script from the <code>02_mitogenome</code> directory into your working directory and modify the header with the requested information. Then, execute the script. This script takes a very LONG time to run, but submit it anyways to see how long it actually takes.</p>
 <p>BLAST ( <strong>B*<em>asic *</em>L</strong>ocal <strong>A*<em>lignment *</em>S</strong>earch <strong>T</strong>ool) is a tool to identify similar regions between sequences by comparing the query (your sequence(s)) against a database of known sequences (nt= nucleotide database, nr= protein database). It allows for variation in sequences including gaps, insertions and deletions. There are different types of BLAST depending on the data type of the query and the database searched. In this case, you used <code>blastn</code> to search a nucleotide sequence against the nucleotide (nt) database.</p>
 <p>Other BLAST commands:
 <em>blastx</em> - nucleotide query against protein database
 <em>blastp</em> - protein query against protein database
 <em>tblastx</em> - nucleotide query against translated nucleotide database
 <em>tblastn</em> - protein query against translated nucleotide database</p>
-<p>Online version of BLAST can be found here: <a href="https://blast.ncbi.nlm.nih.gov/Blast.cgi">https://blast.ncbi.nlm.nih.gov/Blast.cgi</a></p>
-<ol start="5">
-<li>a) Based on the BLAST report, what is the closest organism that your sequence matched in the nt database?<br>
+<p>Copy your sequence and submit it to the online version of BLAST can be found here: <a href="https://blast.ncbi.nlm.nih.gov/Blast.cgi">https://blast.ncbi.nlm.nih.gov/Blast.cgi</a></p>
+<ol start="4">
+<li><p>What type of output did this job produce?</p>
+<br>
+<br>
+</li>
+<li><p>a) Based on the BLAST report online, what is the closest organism that your sequence matched in the nt database?</p>
+<br>
 
 </li>
 </ol>
@@ -135,18 +134,19 @@ b) What directory are they stored in?
 <br>
 <br>
 <br></li>
-<li>How does it compare to the reference mitogenome? What are the number of variants (mutations)?<br>
+<li><p>How does it compare to the reference mitogenome? What are the number of variants (mutations)?</p>
 <br>
 <br>
 <br>
-
+<br>
+</li>
+<li><p>What species is the reference mitogenome? What is the lowest taxonomic group (Phylum, Class, Order, Family, Genus, Species) that your specimen and the reference specimen share?</p>
+<br>
+<br>
+<br>
+<br>
 </li>
 </ol>
-<p>What species is the reference mitogenome? What is the lowest taxonomic group (Phylum, Class, Order, Family, Genus, Species) that your specimen and the reference specimen share?
-<br>
-<br>
-<br>
-<br></p>
 </article></div><div style="background-color: #b4b2b2;width: 50px;height:50px;line-height: 50px;text-align: center;position: fixed;bottom: 10px;right: 10px;padding-top:5px;" onclick="document.documentElement.scrollTop = document.body.scrollTop =0;">
   <svg t="1533629773982" class="icon" style="" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1035" xlink="http://www.w3.org/1999/xlink" width="40" height="40"><defs><style type="text/css">@font-face { font-family: uc-nexus-iconfont; src: url("chrome-extension://pogijhnlcfmcppgimcaccdkmbedjkmhi/res/font_9qmmi8b8jsxxbt9.woff") format("woff"), url("chrome-extension://pogijhnlcfmcppgimcaccdkmbedjkmhi/res/font_9qmmi8b8jsxxbt9.ttf") format("truetype"); }
   </style></defs><path d="M536.255427 195.182354c-7.804756-7.804756-17.966187-11.615549-28.311813-11.615549-9.43693 0-18.874883 3.449565-26.496467 10.163477-2.360767 1.452071-4.356214 3.267417-6.352685 5.262864L218.47792 455.611735c-15.607466 15.60542-15.607466 40.834011 0 56.43943 15.607466 15.607466 41.558511 15.607466 57.167001 0l193.46013-192.733583 0 600.526219c0 22.1423 17.787108 39.927361 39.927361 39.927361 22.140253 0 39.927361-17.785062 39.927361-39.927361L548.959773 319.317583 737.15704 508.422522c15.607466 15.607466 40.469714 15.607466 56.078203 0 15.607466-15.607466 15.425318-40.834011-0.182149-56.441477L536.255427 195.182354 536.255427 195.182354z" p-id="1036" fill="#333"/><path d="M101.784174 143.097092l816.674071 0c22.140253 0 39.925315-17.785062 39.925315-39.927361 0-22.140253-17.784038-39.925315-39.925315-39.925315L101.784174 63.244416c-22.140253 0-39.927361 17.785062-39.927361 39.925315C61.856813 125.31203 79.643921 143.097092 101.784174 143.097092L101.784174 143.097092z" p-id="1037" fill="#333"/></svg>

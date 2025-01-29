@@ -30,13 +30,9 @@ Once you've updated the variables, execute the script. (**hint**- sbatch \<scrip
 <br/>
 <br/>
 
-Pull out one of the mitochondrial marker genes you identified above using `grep`. See prior notes for examples on how to use grep to match strings in the output. Create a new `.fa` file to paste the sequence(s) in.
+Pull out one of the mitochondrial marker genes you identified above using `grep`. (**hint**- navigate to `/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/[netID]/[A/B/C]_unknown/[A/B/C]_unknown_MitoFinder_mitfi_Final_Results` to find the gene predictions).See prior notes for examples on how to use `grep` to match strings in the output. Create a new `.fa` file to paste the sequence(s) in.
 
-Let's see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the `blast_nt.sh` script from the `02_mitogenome` directory into your working directory and modify the header with the requested information. Then, execute the script.
-
-4. What type of file did this job produce?
-<br/>
-<br/>
+Let's see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the `blast_nt.sh` script from the `02_mitogenome` directory into your working directory and modify the header with the requested information. Then, execute the script. This script takes a very LONG time to run, but submit it anyways to see how long it actually takes.
 
 BLAST ( **B**asic **L**ocal **A**lignment **S**earch **T**ool) is a tool to identify similar regions between sequences by comparing the query (your sequence(s)) against a database of known sequences (nt= nucleotide database, nr= protein database). It allows for variation in sequences including gaps, insertions and deletions. There are different types of BLAST depending on the data type of the query and the database searched. In this case, you used `blastn` to search a nucleotide sequence against the nucleotide (nt) database.
 
@@ -46,9 +42,13 @@ _blastp_ - protein query against protein database
 _tblastx_ - nucleotide query against translated nucleotide database
 _tblastn_ - protein query against translated nucleotide database
 
-Online version of BLAST can be found here: https://blast.ncbi.nlm.nih.gov/Blast.cgi
+Copy your sequence and submit it to the online version of BLAST can be found here: https://blast.ncbi.nlm.nih.gov/Blast.cgi
 
-5. a) Based on the BLAST report, what is the closest organism that your sequence matched in the nt database?
+4. What type of output did this job produce?
+<br/>
+<br/>
+
+5. a) Based on the BLAST report online, what is the closest organism that your sequence matched in the nt database?
 <br/>
 
 b) What is the Max Score of the top hit?
@@ -135,7 +135,7 @@ Once you've set up the script and configuration file with your variables/paramet
 <br/>
 <br/>
 
-What species is the reference mitogenome? What is the lowest taxonomic group (Phylum, Class, Order, Family, Genus, Species) that your specimen and the reference specimen share?
+12. What species is the reference mitogenome? What is the lowest taxonomic group (Phylum, Class, Order, Family, Genus, Species) that your specimen and the reference specimen share?
 <br/>
 <br/>
 <br/>
