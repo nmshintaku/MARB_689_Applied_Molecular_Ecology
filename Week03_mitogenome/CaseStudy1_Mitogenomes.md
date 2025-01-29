@@ -32,9 +32,7 @@ Once you've updated the variables, execute the script. (**hint**- sbatch \<scrip
 
 Pull out one of the mitochondrial marker genes you identified above using `grep`. (**hint**- navigate to `/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/[netID]/[A/B/C]_unknown/[A/B/C]_unknown_MitoFinder_mitfi_Final_Results` to find the gene predictions).See prior notes for examples on how to use `grep` to match strings in the output. Create a new `.fa` file to paste the sequence(s) in.
 
-Let's see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the `blast_nt.sh` script from the `02_mitogenome` directory into your working directory and modify the header with the requested information. Then, execute the script. This script takes a very LONG time to run, but submit it anyways to see how long it actually takes.
-
-BLAST ( **B**asic **L**ocal **A**lignment **S**earch **T**ool) is a tool to identify similar regions between sequences by comparing the query (your sequence(s)) against a database of known sequences (nt= nucleotide database, nr= protein database). It allows for variation in sequences including gaps, insertions and deletions. There are different types of BLAST depending on the data type of the query and the database searched. In this case, you used `blastn` to search a nucleotide sequence against the nucleotide (nt) database.
+BLAST ( **B**asic **L**ocal **A**lignment **S**earch **T**ool) is a tool to identify similar regions between sequences by comparing the query (your sequence(s)) against a database of known sequences (*nt*= nucleotide database, *nr*= protein database). It allows for variation in sequences including gaps, insertions and deletions. There are different types of BLAST depending on the data type of the query and the database searched. In this case, you will use `blastn` to search a nucleotide sequence against the nucleotide (nt) database.
 
 Other BLAST commands:
 _blastx_ - nucleotide query against protein database
@@ -42,13 +40,16 @@ _blastp_ - protein query against protein database
 _tblastx_ - nucleotide query against translated nucleotide database
 _tblastn_ - protein query against translated nucleotide database
 
-Copy your sequence and submit it to the online version of BLAST can be found here: https://blast.ncbi.nlm.nih.gov/Blast.cgi
+Let's see if this marker gene shares sequence homology with sequences deposited in the NCBI *nt* database. Copy the `blast_nt.sh` script from the `02_mitogenome` directory into your working directory and modify the header with the requested information. Then, execute the script. If we were to search the entire *nt* database, this script would take a very **LONG** time to run. Instead, I created a custom database of mitochondrial sequences for you to search your sequence against.
+
+Copy your sequence and submit it to the online version of BLAST found here: https://blast.ncbi.nlm.nih.gov/Blast.cgi
+Compare the output of the blast report from the command line to the one from the web browser.
 
 4. What type of output did this job produce?
 <br/>
 <br/>
 
-5. a) Based on the BLAST report online, what is the closest organism that your sequence matched in the nt database?
+5. a) Based on the BLAST report online, what is the closest organism that your sequence matched in the *nt* database? How does this compare to the custom database?
 <br/>
 
 b) What is the Max Score of the top hit?
@@ -64,7 +65,7 @@ e) What is the E-value? Is this considered a good E-value?
 <br/>
 
 
-6. Try another mitochondrial gene. Do the results converge on the same top hit? If not, why do you think this could happen?
+6. Try another mitochondrial gene. Do the results converge on the same top candidate species? If not, why do you think this could happen?
 <br/>
 <br/>
 
@@ -72,7 +73,7 @@ e) What is the E-value? Is this considered a good E-value?
 <br/>
 <br/>
 
-8. Does it appear that the mitochondrial genome of this specimen is present in the nt database?
+8. Does it appear that the mitochondrial genome of this specimen is present in the *nt* database?
 <br/>
 <br/>
 

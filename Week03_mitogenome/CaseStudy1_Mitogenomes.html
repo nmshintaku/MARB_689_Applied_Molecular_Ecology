@@ -49,20 +49,21 @@ b) What directory are they stored in?
 </li>
 </ol>
 <p>Pull out one of the mitochondrial marker genes you identified above using <code>grep</code>. (<strong>hint</strong>- navigate to <code>/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/[netID]/[A/B/C]_unknown/[A/B/C]_unknown_MitoFinder_mitfi_Final_Results</code> to find the gene predictions).See prior notes for examples on how to use <code>grep</code> to match strings in the output. Create a new <code>.fa</code> file to paste the sequence(s) in.</p>
-<p>Let&apos;s see if this marker gene shares sequence homology with sequences deposited in the NCBI nt database. Copy the <code>blast_nt.sh</code> script from the <code>02_mitogenome</code> directory into your working directory and modify the header with the requested information. Then, execute the script. This script takes a very LONG time to run, but submit it anyways to see how long it actually takes.</p>
-<p>BLAST ( <strong>B*<em>asic *</em>L</strong>ocal <strong>A*<em>lignment *</em>S</strong>earch <strong>T</strong>ool) is a tool to identify similar regions between sequences by comparing the query (your sequence(s)) against a database of known sequences (nt= nucleotide database, nr= protein database). It allows for variation in sequences including gaps, insertions and deletions. There are different types of BLAST depending on the data type of the query and the database searched. In this case, you used <code>blastn</code> to search a nucleotide sequence against the nucleotide (nt) database.</p>
+<p>BLAST ( <strong>B*<em>asic *</em>L</strong>ocal <strong>A*<em>lignment *</em>S</strong>earch <strong>T</strong>ool) is a tool to identify similar regions between sequences by comparing the query (your sequence(s)) against a database of known sequences (<em>nt</em>= nucleotide database, <em>nr</em>= protein database). It allows for variation in sequences including gaps, insertions and deletions. There are different types of BLAST depending on the data type of the query and the database searched. In this case, you will use <code>blastn</code> to search a nucleotide sequence against the nucleotide (nt) database.</p>
 <p>Other BLAST commands:
 <em>blastx</em> - nucleotide query against protein database
 <em>blastp</em> - protein query against protein database
 <em>tblastx</em> - nucleotide query against translated nucleotide database
 <em>tblastn</em> - protein query against translated nucleotide database</p>
-<p>Copy your sequence and submit it to the online version of BLAST can be found here: <a href="https://blast.ncbi.nlm.nih.gov/Blast.cgi">https://blast.ncbi.nlm.nih.gov/Blast.cgi</a></p>
+<p>Let&apos;s see if this marker gene shares sequence homology with sequences deposited in the NCBI <em>nt</em> database. Copy the <code>blast_nt.sh</code> script from the <code>02_mitogenome</code> directory into your working directory and modify the header with the requested information. Then, execute the script. If we were to search the entire <em>nt</em> database, this script would take a very <strong>LONG</strong> time to run. Instead, I created a custom database of mitochondrial sequences for you to search your sequence against.</p>
+<p>Copy your sequence and submit it to the online version of BLAST found here: <a href="https://blast.ncbi.nlm.nih.gov/Blast.cgi">https://blast.ncbi.nlm.nih.gov/Blast.cgi</a>
+Compare the output of the blast report from the command line to the one from the web browser.</p>
 <ol start="4">
 <li><p>What type of output did this job produce?</p>
 <br>
 <br>
 </li>
-<li><p>a) Based on the BLAST report online, what is the closest organism that your sequence matched in the nt database?</p>
+<li><p>a) Based on the BLAST report online, what is the closest organism that your sequence matched in the <em>nt</em> database? How does this compare to the custom database?</p>
 <br>
 
 </li>
@@ -76,7 +77,7 @@ b) What directory are they stored in?
 <p>e) What is the E-value? Is this considered a good E-value?
 <br></p>
 <ol start="6">
-<li><p>Try another mitochondrial gene. Do the results converge on the same top hit? If not, why do you think this could happen?</p>
+<li><p>Try another mitochondrial gene. Do the results converge on the same top candidate species? If not, why do you think this could happen?</p>
 <br>
 <br>
 </li>
@@ -84,7 +85,7 @@ b) What directory are they stored in?
 <br>
 <br>
 </li>
-<li><p>Does it appear that the mitochondrial genome of this specimen is present in the nt database?</p>
+<li><p>Does it appear that the mitochondrial genome of this specimen is present in the <em>nt</em> database?</p>
 <br>
 <br>
 
