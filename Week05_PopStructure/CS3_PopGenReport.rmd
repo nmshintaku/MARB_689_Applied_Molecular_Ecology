@@ -1,7 +1,7 @@
 ---
 title: "Acerv_PopStructure"
 author: "Sheila Kitchen"
-date: "February 13, 2022"
+date: "February 11, 2025"
 output:
   pdf_document:
     latex_engine: xelatex
@@ -381,7 +381,7 @@ At k=5 Cuba, San Andres and Curacao become a separate population from the easter
 ## ADMIXTURE
 ADMIXTURE is a software tool for maximum likelihood estimation of individual ancestries from multilocus SNP genotype datasets. It uses the same statistical model as STRUCTURE but calculates estimates much more rapidly using a fast numerical optimization algorithm. This is key when you have many millions of SNPs (either tool is fine with the number of SNPs we are using today).
 
-Specifically, ADMIXTURE uses a block relaxation approach to alternately update allele frequency and ancestry fraction parameters. Each block update is handled by solving a large number of independent convex optimization problems, which are tackled using a fast sequential quadratic programming algorithm. Convergence of the algorithm is accelerated using a novel quasi-Newton acceleration method. The algorithm outperforms EM algorithms and MCMC sampling methods by a wide margin. 
+Specifically, ADMIXTURE uses a block relaxation approach to alternately update allele frequency and ancestry fraction parameters. Each block update is handled by solving a large number of independent convex optimization problems, which are tackled using a fast sequential quadratic programming algorithm. Convergence of the algorithm is accelerated using a novel quasi-Newton acceleration method. The algorithm outperforms EM algorithms and MCMC sampling methods by a wide margin.
 
 Every K value was estimated 10 times with a cross-validation procedure. More precisely, the cross-validation procedure partitions all the observed genotypes into v = 10 roughly equally-sized folds. The procedure masks (i.e. converts to
 “MISSING”) all genotypes, for each fold in turn. For each fold, the resulting masked dataset G˜ is used to calculate estimates ˜θ = (Q, ˜ P˜). The prediction error is estimated by averaging the squares of the deviance residuals for the binomial model.
@@ -555,7 +555,7 @@ In this case we find the first two distance classes show positive spatial autoco
 Next, run a Mantel test between the two distance matrices.
 ```{r}
 
-man<-vegan::mantel(xdis = genDist2, ydis = as.dist(AC.xy2), method = "spearman") 
+man<-vegan::mantel(xdis = genDist2, ydis = as.dist(AC.xy2), method = "spearman")
 man
 
 aa = as.vector(genDist2)
