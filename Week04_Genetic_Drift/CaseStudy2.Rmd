@@ -1,8 +1,8 @@
 ---
-title: 'Case Study 2: Gene Flow and Mating'
+title: 'Case Study 2: Gene Flow, Mating and Population Structure'
 author: "Sheila Kitchen"
 output: pdf_document
-date: '2025-01-27'
+date: '2025-02-11'
 ---
 
 ```{r setup, include=FALSE}
@@ -24,6 +24,23 @@ library(tidyverse)
 library(reshape2)
 library(gplots)
 library(StAMPP)
+library(vcfR)
+library(ape)
+library(data.table)
+library(dplyr)
+library(boa)
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(scatterpie)
+library(mapplots)
+library(psych)
+library(multcompView)
+library(vegan)
+library(ggpmisc)
+library(geosphere)
+library(SNPRelate)
+theme_set(theme_bw())
 ```
 
 ### Change working directory
@@ -34,10 +51,10 @@ To identify your current directory type:
 getwd()
 ```
 
-This should by default be your home directory. Let's change that to your class working directory. *Note*- change `kitchens` to your directory name before executing the block of code below.
+This should by default be your home directory when you first log in. Let's change that to your class working directory. *Note*- change `kitchens` to your directory name before executing the block of code below.
 
 ```{r}
-#setwd("/scratch/group/kitchen-group/class_working_directories/kitchens/")
+setwd("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/kitchens/")
 ```
 
 Now check your working directory again.
@@ -50,7 +67,7 @@ Import the genepop file of microsatellite data to convert to `genind` object :
 
 ```{r import}
 #Read in file
-seafan_gen <- import2genind("/scratch/group/kitchen-group/04_geneFlow/Pinkseafan_13MicrosatLoci.gen", ncode = 3, quiet = TRUE)
+seafan_gen <- import2genind("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/04_geneFlow/Pinkseafan_13MicrosatLoci.gen", ncode = 3, quiet = TRUE)
 ```
 
 To look at the three random samples for locus "Ever002", run:
@@ -82,6 +99,9 @@ We will update the site labels as so:
 ```{r}
 popNames(seafan_gen)
 popNames(seafan_gen) = gsub("[^a-zA-Z]", "", popNames(seafan_gen))
+```
+
+```{r}
 popNames(seafan_gen)
 ```
 
@@ -105,7 +125,7 @@ Next, let's filter on individuals with many missing genotypes. Again we will set
 seafan_gen <- missingno(seafan_gen, type = "geno", cutoff = 0.20)
 ```
 
-How many individuals were removed at this stage? <br> <br>
+How many individuals were removed at this stage?
 
 Let's see what our genind object looks like now:
 
@@ -115,19 +135,21 @@ seafan_gen
 
 ### How many unique individuals do I have?
 
+The **multilocus genotypes** (MLGs) are critically important for tracking dispersal and population structure of organisms, especially those that reproduce clonally (plants, sponges, cnidarians, flatworms, annelids, sea stars, and many more). For such clonal organisms, we expect that offspring of a given animal will have the same genomic variants as their parent (there could be very slight differences due to mutations in the germ line). The data was pre-processed to only retain unique individuals for all the downstream analysis. 
+
 We can use the `mlg` function in the poppr package to calculate the number of unique multilocus genotypes (MLG) present in the data set.
 
 ```{r}
 mlg(seafan_gen)
 ```
 
-Were any duplicates (i.e., clone mates) found? <br> <br>
+Were any duplicates (i.e., clone mates) found?
 
 Let's remove those duplicates. We will identify the duplicates and randomly sample which one to remove.
 
 ```{r}
 dups_seafan <- mlg.id(seafan_gen)
-dups <- list()
+dups <- list() 
 for (i in dups_seafan){ # for each element in the list object
   if (length(dups_seafan[i]) > 1){ # if the length is greater than 1
   dups<-sample(paste((print(i))),1) # randomly sample one of the duplicates to remove
@@ -152,7 +174,7 @@ The function `basic.stats` below will estimates individual counts, allelic frequ
 basic_seafan <- basic.stats(seafan_gen, diploid = TRUE)
 ```
 
-Let's plot out observed and expected heterozygosity estimates for all loci.
+Let's plot out observed and expected heterozygosities for all loci.
 
 ```{r}
 het<-basic_seafan$perloc
@@ -186,9 +208,9 @@ ggplot(HoHe %>% arrange(value), aes(x=value, y=pop, group=variable, color=variab
 
 ### Non-Random Mating
 
-Non-random mating (including sexual selection) does not directly affect allele frequencies, but can influence genotype frequencies within populations. Selfing and inbreeding are the most common deviations from random mating (and hence Hardy-Weinberg Equilibrium) that we encounter in natural populations. Inbreeding is defined, *sensu stricto*, as mating between two related individuals. This ranges from complete selfing, where one parent alone produces offspring, to consanguineous mating, where individuals with some degree of relatedness produce offspring.
+Non-random mating (including sexual selection) does not directly affect allele frequencies, but can influence genotype frequencies within populations. Selfing and inbreeding are the most common deviations from random mating (and hence Hardy-Weinberg Equilibrium) that we encounter in natural populations. Inbreeding is defined, sensu stricto, as mating between two related individuals. This ranges from complete selfing, where one parent alone produces offspring, to consanguineous mating, where individuals with some degree of relatedness produce offspring.
 
-The primary consequence of inbreeding is a reduction in the frequency of the heterozygous genotype. Consider a Punnet square where a heterozygote is producing a selfed offspring. The offspring in the next generation are only 50% heterozygotes. Each generation of selfing, homozygotes produce homozygotes but only half of the offspring from heterozygotes stay as such. This process increases the relative frequency of homozygous genotypes in the population, though if you look at the offspring, the frequency of alleles do not change---there are as many A alleles as B alleles in the next generation of selfing.
+The primary consequence of inbreeding is a reduction in the frequency of the heterozygous genotype. Consider the following Punnet square where a heterozygote is producing a selfed offspring. The offspring in the next generation are only 50% heterozygotes. Each generation of selfing, homozygotes produce homozygotes but only half of the offspring from heterozygotes stay as such. This process increases the relative frequency of homozygous genotypes in the population, though if you look at the offspring, the frequency of alleles do not change---there are as many A alleles as B alleles in the next generation of selfing.
 
 From our prior estimates of Ho and He we can estimate inbreeding as, Fis = 1- Ho/He. This is the proportion of the variance in the subpopulation contained in an individual. Let's plot the Fis estimates for the sea fans.
 
@@ -198,7 +220,7 @@ fis<-basic_seafan$Fis
 fism<-melt(as.data.frame(fis))
 ggplot(fism, aes(x=value, y=variable, color=variable)) + geom_boxplot() +
   geom_jitter(color="black", size=0.4, alpha=0.2) + xlab("") + ylab("Fis estimates") + theme_bw()+theme(axis.text=element_text(size=12),
-        axis.title=element_text(size=14))
+        axis.title=element_text(size=14)) 
 ```
 
 ### Evidence of Gene Flow
@@ -208,21 +230,21 @@ Fst, also known as the **fixation index**, is an extremely important statistic i
 We calculated the matrices of Nei's distances among individuals and populations.
 
 ```{r nei}
-x2 <- as.matrix(seafan_gen) #convert genlight object to matrix
+x2 <- as.matrix(seafan_gen) #convert genlight object to matrix 
 sample <- row.names(x2)
 
-ploidy <- ploidy(seafan_gen) #extract ploidy info from genlight object
-x2 = x2 * (1/ploidy) #convert allele counts to frequency
-x2[is.na(x2)] = NaN
+ploidy <- ploidy(seafan_gen) #extract ploidy info from genlight object 
+x2 = x2 * (1/ploidy) #convert allele counts to frequency 
+x2[is.na(x2)] = NaN 
 format <- vector(length = length(sample))
 #format id for the genotype data
-format[1:length(format)] = "freq"
+format[1:length(format)] = "freq" 
 
 pop.names <- as.data.frame(pop(seafan_gen))
 
-x.stampp <- as.data.frame(cbind(sample, pop.names, ploidy, format, x2)) #convert to basic r data.frame suitable to stamppConvert
+x.stampp <- as.data.frame(cbind(sample, pop.names, ploidy, format, x2)) #convert to basic r data.frame suitable to stamppConvert 
 
-geno <- stamppConvert(x.stampp, 'r')
+geno <- stamppConvert(x.stampp, 'r') 
 
 ### Calculate Nei's distances between individuals/pops
 D.ind <- stamppNeisD(geno, pop = FALSE) # Nei's distance between indivs
@@ -275,8 +297,488 @@ ggplot(data = Dmat2, aes(x = Var1, y = Var2, fill = Freq))+
         )
 ```
 
-Which populations are genetically similar? <br> <br>
+Which populations are genetically similar?
 
-Which populations are highly differentiated from the rest? <br> <br>
+Which populations are highly differentiated from the rest?
 
-If you've gotten this far, press the 'knit' button at the top of screen. Then, save the PDF you just made from the HPRC to your computer. You can also download files following the instructions here: <https://hprc.tamu.edu/wiki/HPRC:File_Transfers>. Email me the PDF to complete the assignment.
+------------------------------------------------------------------------
+
+# *Acropora cervicornis* population structure
+
+For illustration purposes, we will look at a population structure [study](https://doi.org/10.7717/peerj.13854) of reef-building corals called *Acropora cervicornis* and *Acropora palmata* (Fig 1 B,C). For this study, though, a third species, called *Acropora digitifera* was used as an outgroup, and all variant calls were made based on the genome of this third species. The goal of this study was to analyze the population structure of these two coral species in Colombia, a location that has not been incorporated in prior studies. The data was combined with individuals from around the Caribbean: Belize, Curacao, Florida, and the US Virgin Islands.
+
+<img src="https://www.g3journal.org/content/ggg/9/5/1633/F1.large.jpg?width=800&height=600&carousel=1"
+    alt="Drawing"
+    style="width: 500px;"/>
+
+Figure 1. Coral species used in this genomic variant analysis.</center></font>
+
+For today's activity we will focus on only _A. cervicornis_.
+
+## Import the VCF file:
+
+In order to analyze the data, we need to indicate where the `.vcf` file that we generated previously is stored. The `.vcf` file, short for **variant call format**, contains information on differences in the genetic information of particular animals from some reference genome sequence (an outgroup species, in this case). This file format is much more efficient than storing all the genetic information for a given sample (animal, in our case), because much of this is redundant from one individual to another (many of the \~100 million base pairs are the same for many members of a species, besides for the single nucleotide polymorphisms (SNPs) and potential insertions or deletions). Using the `.vcf` to keep track of differences from a reference genome, you can maintain all the relevant (disparate) information on each of a set of samples along with the reference genome, which houses all the redundant information that applies to all samples (its a huge storage space saver!). Full details on the `.vcf` format can be found at the [1000 Genomes Project](http://www.internationalgenome.org/wiki/Analysis/Variant%20Call%20Format/VCF%20%28Variant%20Call%20Format%29%20version%204.0/encoding-structural-variants) website).
+
+Based on the unique multi-locus genotype (MLG) report, I extracted the 57 MLGs from the 72 *Acropora cervicornis* samples using VCFTOOLS (outside of R). I combined those with the unique *A. cervicornis* MLGs from another paper [Kitchen et al. 2020](https://rdcu.be/dm7j2) that included additional geographic locations from across the Caribbean (n=121 MLGs) and filtered for a minor allele frequency of 5%.
+
+```{r import}
+#Read in VCF file with array SNVs
+file.copy("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/05_popStructure/AC_mergeDB_maf0.05.recode.vcf", ".")
+ACvcf <- read.vcfR("AC_mergeDB_maf0.05.recode.vcf")
+ACvcf
+```
+
+There is a lot of useful information here on what kind of data we are working with. You can see that there are 6201 variants. We can also see that there are 921 `CHROMs` (chromosomes) that these variants fall on; in the case of a very well annotated and assembled genome like *Drosophila* or humans, these will truly correspond to chromosomes, though for this coral analysis, these represent contigs instead. A **contig** is a contiguous section of DNA given from the assembly process of a genome; they may represent a full chromosome, depending on what data went into the assembly, or some fragmented region of a chromosome. Which chromosome variants fall on is not really the scope of this analysis, since we have yet to achieve a chromosome level assembly, but might be at some point.
+
+Let's now add more information about the samples in this data set.
+
+```{r}
+#add population or species information to the genind pop slot
+file.copy("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/05_popStructure/acerv_pop3.txt", ".")
+poptab<-read.table("acerv_pop3.txt",
+                   check.names=FALSE, header=F, na.strings = c("", "NA"),
+                   stringsAsFactors = FALSE, sep="\t",encoding="UTF-8")
+colnames(poptab)<-c("row_id","affy_id","user_specimen_id","region", "lat", "long","subregion", "region2","subregion2","assigned_pop")
+```
+
+Import as a GENLIGHT formatted object. Similar to GENIND for msat data above.
+```{r}
+gindAC <- vcfR2genlight(ACvcf)
+gindAC@pop <- as.factor(poptab$region)
+strata(gindAC) <- data.frame(poptab[,c(4,7)])
+gindAC
+
+```
+
+## Population Structure Analyses
+
+### K-clustering- how many clusters/populations?
+Identification of the best K is performed by find.clusters in the adegenet package.This function first transforms the data using PCA. Then, it runs k-means algorithm with increasing values of k and computes associated summary statistics (by default, BIC). This approach looks for a minimal cluster number that best explains the pattern in the data. Adding more clusters than the minimal number that best explain the data gets penalized under this approach because it adds additional parameters to the model. We will take the cluster number that minimized the BIC, though this package has other options for how to do this. They actually recommend that you do it by eye from a plot of the BIC vs cluster number, but we use the automated option here.
+
+```{r ks}
+
+# find optimal k, repeat 10 times for each value
+maxK <- 10
+myMat <- matrix(nrow=10, ncol=maxK)
+colnames(myMat) <- 1:ncol(myMat)
+for(i in 1:nrow(myMat)){
+  grp <- find.clusters(gindAC, n.pca = 120, choose.n.clust = FALSE,  max.n.clust = maxK)
+  myMat[i,] <- grp$Kstat
+}
+
+my_df <- melt(myMat)
+colnames(my_df)[1:3] <- c("Group", "K", "BIC")
+my_df$K <- as.factor(my_df$K)
+head(my_df)
+```
+
+Now plot the results:
+```{r plotK}
+p1 <- ggplot(my_df, aes(x = K, y = BIC))
+p1 <- p1 + geom_boxplot()
+p1 <- p1 + theme_bw()
+p1 <- p1 + xlab("Number of groups (K)")
+p1
+
+```
+There is a decrease in BIC at k= 4, after which the BIC increases. This suggests 4 clusters should be retained.
+
+## PCA
+Summarize the variation between the samples using all the SNP data.
+```{r PCA}
+ac.pca <- glPca(gindAC, nf = 10)
+```
+
+Plot of the % variation explained by eigenvectors
+```{r}
+#plot of the % variation explained by eigenvectors
+barplot(100*ac.pca$eig/sum(ac.pca$eig), col = heat.colors(50), main="PCA Eigenvalues")
+title(ylab="Percent of variance\nexplained", line = 2)
+title(xlab="Eigenvalues", line = 1)
+```
+
+Create new data frame with the PC scores per sample:
+```{r df}
+ac.pca.scores <- as.data.frame(ac.pca$scores)
+ac.pca.scores$pop <- pop(gindAC)
+head(ac.pca.scores)
+```
+
+Extract the variance explained by each principal component retained.
+```{r var}
+# variance explained by each axis
+var_frac <- ac.pca$eig/sum(ac.pca$eig)
+var_frac[1:4]
+```
+
+Create a vector sub-populations within Colombia for plotting purposes:
+```{r}
+# Colombia regions/subpopulations
+Colombia<-c("Urabá Gulf","Cartagena","Rosario", "San Andrés", "San Bernardo", "Tayrona", "I. Arena")
+```
+
+Now we can plot the PCA for the regions within and outside of Colombia.
+```{r plotPCA}
+#plot the PCA
+set.seed(9)
+cols2 <- c(`San Andrés`="#003049",`Urabá Gulf`="#284CB8",`San Bernardo`="#7A94E1",`Rosario`="#3370A3",`I. Arena`="#69BAC7",`Tayrona`="#97CFD8",`Florida`="#959177",`Belize`= "#FCBF49",`Cuba`="#9EDFA8", `Curacao`="#F77F00",`Puerto Rico`="#D62828" ,`USVI`="#961B33")
+
+p <- ggplot(ac.pca.scores, aes(x=PC1, y=PC2, color=pop))
+p <- p + geom_point(size=2)
+p <- p + stat_ellipse(level = 0.95, size = 1)
+p <- p + scale_color_manual(values=cols2)
+p <- p + theme_bw() +ylab("PC2 (6.1%)") + xlab("PC1 (11.4%)")
+
+p
+```
+
+Follow up by only looking at the Colombia samples, the focus of this study.
+```{r}
+# just Colombia
+sub_gindAC<-popsub(gindAC,
+  sublist = c("San Andrés","Urabá Gulf","San Bernardo","Rosario","I. Arena","Tayrona")
+)
+
+ac.pca <- glPca(sub_gindAC, nf = 10)
+ac.pca.scores <- as.data.frame(ac.pca$scores)
+ac.pca.scores$pop <- pop(sub_gindAC)
+
+# variance explained by each axis
+var_frac <- ac.pca$eig/sum(ac.pca$eig)
+
+set.seed(9)
+cols2 <- c(`San Andrés`="#003049",`Urabá Gulf`="#284CB8",`San Bernardo`="#69BAC7",`Rosario`="#961B33" ,`Cartagena`="#D62828",`I. Arena`="#F77F00",`Tayrona`="#FCBF49")
+p <- ggplot(ac.pca.scores[ac.pca.scores$pop %in% Colombia,], aes(x=PC1, y=PC2, color=pop))
+p <- p + geom_point(size=2)
+p <- p + stat_ellipse(level = 0.95, size = 1)
+p <- p + scale_color_manual(values=cols2)
+p <- p + theme_bw() +ylab("PC2 (2.5%)") + xlab("PC1 (14.5%)")
+
+p
+
+```
+Urabá Gulf is a transitional zone between San Andres and the other locations. The two samples from Curacao overlap the transitional zone of the Colombia samples.
+
+### DAPC
+We can use a Discriminant Analysis of Principal Components to cluster genetically related individuals. This multivariate statistical approach partitions the sample into a between-group and within- group component, in an effort to maximize discrimination between groups. Data is first transformed using a principal components analysis (PCA) and subsequently clusters are identified using discriminant analysis (DA). Unlike STRUCTURE, it does not make assumptions on population genetic parameters such as Hardy Weinberg equilibrium. More information can be found [here](http://adegenet.r-forge.r-project.org/files/tutorial-dapc.pdf).
+
+### Using the optimal K determined above
+```{r dapc}
+#use best k from above
+set.seed(9)
+ac.dapc <- dapc(gindAC, grp$grp, n.pca=40, n.da=3)
+summary(ac.dapc)
+```
+
+```{r}
+cols<-c("#D62828","#003049","#FCBF49","#EAE2B7")
+
+my_df <- as.data.frame(ac.dapc$ind.coord)
+my_df$Group <- ac.dapc$grp
+my_df$pop <-poptab$region
+head(my_df)
+
+p2 <- ggplot(my_df, aes(x = LD1, y = LD2, color = factor(Group), shape=factor(pop)))
+p2 <- p2 + geom_point(size = 3, alpha=0.8)
+p2 <- p2 + theme_bw()
+p2 <- p2 + scale_color_manual(values=cols)+
+  scale_shape_manual(values=c(17,18,19,7,21,22,23,24,25,8,15,9))
+p2
+```
+
+The first plot we will make is a PCA to split the *A. cervicornis* samples based on region. We will plot the first two principle components, which will show the two orthogonal vectors in the data that explain the most variance.
+```{r}
+#separate by populations
+dapc.results <- as.data.frame(ac.dapc$posterior)
+dapc.results$pop <- pop(gindAC)
+dapc.results$indNames <- rownames(dapc.results)
+
+#reorganize dataframe for ggplot
+dapc.results <- melt(dapc.results)
+colnames(dapc.results) <-c("Original_Pop","Sample","Assigned_Pop","Posterior_membership_probability")
+dapc.results$userID <- poptab$user_specimen_id
+
+dapc.results$Original_Pop = factor(dapc.results$Original_Pop, levels=c( "Florida","Cuba","Belize","San Andrés","Urabá Gulf","San Bernardo","Rosario","I. Arena","Tayrona","Curacao","Puerto Rico","USVI"))
+
+p <- ggplot(dapc.results, aes(x=userID, y=Posterior_membership_probability, fill=Assigned_Pop))
+p <- p + geom_bar(stat='identity',color="darkgrey",size=0.0001)
+p <- p + facet_grid(~ Original_Pop, scales = "free_x",space = "free_x")
+p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5), panel.spacing = unit(0, "lines"))+
+    scale_y_continuous(expand = c(0, 0))
+p <- p + scale_fill_manual(values=cols)
+p
+
+```
+We can see the two samples from Urabá Gulf were assigned to pop2 and the rest to pop4.
+
+### Map the assigned populations to their geographic locations
+Next, we can map the cluster assignments to the location the samples were collected.
+```{r maps}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+
+poptab$assign1<-ac.dapc$assign==1
+poptab$assign1[poptab$assign1=="TRUE"]<-1
+poptab$assign1[poptab$assign1=="FALSE"]<-0
+poptab$assign2<-ac.dapc$assign==2
+poptab$assign2[poptab$assign2=="TRUE"]<-1
+poptab$assign2[poptab$assign2=="FALSE"]<-0
+poptab$assign3<-ac.dapc$assign==3
+poptab$assign3[poptab$assign3=="TRUE"]<-1
+poptab$assign3[poptab$assign3=="FALSE"]<-0
+poptab$assign4<-ac.dapc$assign==4
+poptab$assign4[poptab$assign4=="TRUE"]<-1
+poptab$assign4[poptab$assign4=="FALSE"]<-0
+
+ag<-aggregate(cbind(assign1,assign2,assign3,assign4) ~ subregion, data = poptab, sum)
+
+ag2 <-ag %>%
+  right_join(poptab %>%
+      select("subregion","lat", "long","region"),by='subregion') %>%
+  group_by(region) %>%
+  distinct(subregion,.keep_all = TRUE) %>%
+  mutate(radius=sum(assign1,assign2,assign3,assign4)/15) %>%
+  mutate(pop1=sum(assign1),pop2=sum(assign2),pop3=sum(assign3),pop4=sum(assign4), n=sum(assign1,assign2,assign3,assign4)) %>%
+  distinct(region,.keep_all = TRUE) %>%
+  select(-assign1, -assign2,-assign3,-assign4)
+
+p5<-ggplot(data = world) +
+    geom_sf() +
+    coord_sf(xlim = c(-60, -90), ylim = c(7, 30), expand = FALSE)
+
+p6 <-p5+ geom_scatterpie(data = ag2,aes(x =long, y=lat, group=region, r=radius), cols=c("pop1","pop2","pop3","pop4"),alpha=0.5)+geom_scatterpie_legend(ag2$radius,x=-68, y=25, n=4)
+p6 <- p6 + scale_fill_manual(values=cols)
+p6
+
+```
+
+#### Zoom in on the split assignment by subregions in Urabá Gulf
+The collection site Bajo Naui has two samples assigned to pop2 and one sample assigned to pop 4.
+```{r map-zoom}
+p8<-ggplot(data = world) +
+    geom_sf() +
+    coord_sf(xlim = c(-77.6, -77.1), ylim = c(8.5, 9), expand = TRUE)
+
+ag3 <-ag %>%
+  right_join(poptab %>%
+      select("subregion","lat", "long","region"),by='subregion') %>%
+  group_by(subregion) %>%
+  distinct(subregion,.keep_all = TRUE) %>%
+  mutate(radius=sum(assign1,assign2,assign3,assign4)/15) %>%
+  mutate(pop1=sum(assign1),pop2=sum(assign2),pop3=sum(assign3),pop4=sum(assign4), n=sum(assign1,assign2,assign3,assign4)) %>%
+  select(-assign1, -assign2,-assign3,-assign4)
+
+p9<-p8+ geom_scatterpie(data = ag3,aes(x =long, y=lat, group=subregion, r=radius/10), cols=c("pop1","pop2","pop3","pop4"),alpha=.8)
+p9 <- p9 + scale_fill_manual(values=cols)
+p9
+
+```
+Now we can see where the individuals from Urabá Gulf were collected and their population assignment.
+
+## ADMIXTURE
+ADMIXTURE is a software tool for maximum likelihood estimation of individual ancestries from multilocus SNP genotype datasets. It uses the same statistical model as STRUCTURE but calculates estimates much more rapidly using a fast numerical optimization algorithm. This is key when you have many millions of SNPs (either tool is fine with the number of SNPs we are using today).
+
+Specifically, ADMIXTURE uses a block relaxation approach to alternately update allele frequency and ancestry fraction parameters. Each block update is handled by solving a large number of independent convex optimization problems, which are tackled using a fast sequential quadratic programming algorithm. Convergence of the algorithm is accelerated using a novel quasi-Newton acceleration method. The algorithm outperforms EM algorithms and MCMC sampling methods by a wide margin.
+
+Every K value was estimated 10 times with a cross-validation procedure. More precisely, the cross-validation procedure partitions all the observed genotypes into v = 10 roughly equally-sized folds. The procedure masks (i.e. converts to
+“MISSING”) all genotypes, for each fold in turn. For each fold, the resulting masked dataset G˜ is used to calculate estimates ˜θ = (Q, ˜ P˜). The prediction error is estimated by averaging the squares of the deviance residuals for the binomial model.
+
+Here we can look at the cross-validation plot to determine K (population) size.
+```{r}
+#Cross validation plot
+file.copy("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/05_popStructure/CVerror_AC.txt", ".")
+ktab<- read.table("CVerror_AC.txt", header=F)
+
+tab<-describeBy(ktab$V2, ktab$V1, mat=T)
+
+ggplot(tab, aes(x=as.numeric(group1), y=mean)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=0.1) +
+  geom_point(size=2)+ xlab("K")+ylab("Prediction Error")+theme_set(theme_bw())+
+  scale_x_continuous(breaks = seq(0, 10, by = 1))
+
+```
+
+## Clumpak
+After running ADMIXTURE, we can automate the analysis of the replicate runs using [clumpak](https://clumpak.tau.ac.il/). The output for K=4 will be plotted below.
+```{r}
+#separate by populations
+file.copy("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/05_popStructure/admix_k4_clumpak.txt", ".")
+amix<- read.table("admix_k4_clumpak.txt", header=T,check.names=FALSE,stringsAsFactors = FALSE, sep="\t")
+
+#reorganize data frame for ggplot
+admix.results <- melt(amix)
+
+admix.results$Original.pop = factor(admix.results$Original.pop, levels=c("Florida","Cuba","Belize","San Andrés","Urabá Gulf","San Bernardo","Rosario","I. Arena","Tayrona","Curacao","Puerto Rico","USVI"))
+
+p <- ggplot(admix.results, aes(x=sample.id, y=value, fill=variable))
+p <- p + geom_bar(stat='identity',color="darkgrey",size=0.0001)
+p <- p + facet_grid(~ Original.pop, scales = "free_x",space = "free_x")
+p <- p + theme(axis.text.x = element_blank(), axis.ticks.x=element_blank(), panel.spacing = unit(0, "lines"))+
+    scale_y_continuous(expand = c(0, 0))
+p <- p + scale_fill_manual(values=c(Pop1="#FCBF49",Pop2="#D62828",Pop3="#EAE2B7",Pop4="#003049"))
+p
+
+```
+
+## Genetic Differentiation
+
+### AMOVA
+Analysis of Molecular Variance (AMOVA) is a method for estimating population differentiation from molecular data taking into account the mutational distance between alleles. Unlike Fst, which quantifies genetic differentiation based on allele frequencies, AMOVA treats molecular data as vectors and estimates Euclidean distances between alleles. Furthermore, it is possible to test hypotheses about differentiation by grouping subpopulations in a hierarchical structure (Excoffier et al., 1992).
+
+Re-import the vcf file as GENIND.
+```{r}
+gindAC2 <- vcfR2genind(ACvcf)
+gindAC2@pop <- as.factor(poptab$region2)
+strata(gindAC2) <- data.frame(poptab[,c(4,7,8,9,10)])
+gindAC2
+```
+
+Calculate an absolute distance matrix:
+```{r}
+xdis<-bitwise.dist(gindAC2)
+```
+
+Perform AMOVA test on region:
+```{r}
+amova <- poppr.amova(gindAC2, ~region2,  dist=xdis)
+
+amova
+```
+
+Plot the significance of the permutation test.
+```{r}
+set.seed(1999)
+signif <- randtest(amova, nrepet = 9999)
+signif
+plot(signif)
+```
+
+Repeat with two strata set, assigned population and region.
+```{r}
+amova2 <- poppr.amova(gindAC2, ~assigned_pop/region2,  dist=xdis)
+
+amova2
+
+set.seed(1999)
+signif2 <- randtest(amova2, nrepet = 9999)
+signif2
+plot(signif2)
+```
+There is significant evidence of population structure by region (not surprising).
+
+### FST
+We will calculate the matrices of genetic distances among individuals and populations. The _stamppFst_ function calculates the pairwise Fst values along with confidence intervals and p-values between populations according to the method proposed by Wright(1949) and updated by Weir and Cockerham (1984). The _basic.stats_ function estimates individual counts, allelic frequencies, observed heterozygosities and genetic diversities per locus and population (Fst and Fstp as well as Fis following Nei (1987) per locus and overall loci).
+
+Calculate pairwise Fst values:
+```{r}
+
+sf<-stamppFst(gindAC, nboots = 100, percent = 95)
+```
+
+Separate the stats by region:
+```{r}
+#summary by region
+# separate populations into individual genind objects
+n.pop <- seppop(gindAC2)
+
+bs_I<-basic.stats(n.pop$`I. Arena`)
+bs_I$overall
+
+bs_T<-basic.stats(n.pop$Tayrona)
+bs_T$overall
+
+bs_SB<-basic.stats(n.pop$`San Bernardo`)
+bs_SB$overall
+
+bs_SA<-basic.stats(n.pop$`San Andrés`)
+bs_SA$overall
+
+bs_R<-basic.stats(n.pop$Rosario)
+bs_R$overall
+
+bs_Cap<-basic.stats(n.pop$`Urabá Gulf`)
+bs_Cap$overall
+
+he_ho<-cbind(TI_He=bs_T$perloc$Hs,TI_HO=bs_T$perloc$Ho,  SB_He=bs_SB$perloc$Hs, SB_HO=bs_SB$perloc$Ho,
+            R_He=bs_R$perloc$Hs,  R_HO=bs_R$perloc$Ho, SA_He=bs_SA$perloc$Hs,SA_HO=bs_SA$perloc$Ho,
+            Cap_He=bs_Cap$perloc$Hs, Cap_HO=bs_Cap$perloc$Ho)
+
+boxplot(he_ho)
+```
+
+Lump all locations together:
+```{r}
+# Estimates of heterozygosity for the whole species
+sub_gindAC<-popsub(gindAC2,
+  sublist = c("Urabá Gulf","Rosario","San Andrés","San Bernardo","Tayrona", "I. Arena"),
+)
+toto_AC <- summary(sub_gindAC)
+
+# plot Ho amd He Acerv estimates together
+boxplot(toto_AC$Hexp, toto_AC$Hobs)
+```
+
+Test for significant difference between observed and expected heterozygosity.
+```{r}
+# significance test
+bartlett.test(list(toto_AC$Hexp, toto_AC$Hobs))
+t.test(toto_AC$Hexp, toto_AC$Hobs, pair = T, var.equal = TRUE, alter = "greater")
+
+```
+
+## Isolation-by-distance test
+The Mantel's test assesses whether the pairwise genetic distance matrix is correlated with the pairwise geographic distance matrix.
+```{r}
+file.copy("/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/05_popStructure/geoDist2.txt", ".")
+AC.mat2 <- read.table("geoDist2.txt", header=T,sep="\t",
+                               check.names=FALSE,stringsAsFactors = FALSE)
+
+AC.xy <- dist(cbind(AC.mat2$long, AC.mat2$lat))
+
+#Calculate the distance between two locations/nests.
+#default unit of measurement is kilometers
+AC.xy  <- distm(as.matrix(AC.mat2[,c("long","lat")]), fun = distHaversine)/1000
+
+# Euclidian genetic distance of all sites
+genDist<-as.dist(sf$Fsts)
+
+# just Colombia sites
+genDist2<-as.dist(sf$Fsts[7:12,7:12])
+AC.xy2<-as.dist(AC.xy[7:12,7:12])
+```
+
+We’ll create a population-level Mantel correlogram with the proportion of shared alleles. The biological hypothesis of isolation-by-distance postulates that genetic distance increases with geographic distance. In this method there is no assumption of linearity.
+```{r}
+AC.correlog <- mantel.correlog(genDist2, XY=AC.xy2, nperm=9999)
+AC.correlog
+plot(AC.correlog)
+
+```
+In this case we find the first two distance classes show positive spatial autocorrelation.
+
+Next, run a Mantel test between the two distance matrices.
+```{r}
+
+man<-vegan::mantel(xdis = genDist2, ydis = as.dist(AC.xy2), method = "spearman")
+man
+
+aa = as.vector(genDist2)
+tt = as.vector(AC.xy2)
+mat = data.frame(aa,tt)
+
+my.formula <- y ~ x
+mm = ggplot(mat, aes(y = aa, x = tt)) +
+    geom_point(size = 3, alpha = 0.5) +
+    geom_smooth(method = "lm", colour = "black", alpha = 0.2) +
+    labs(x = "Geographic Distance (km)", y = "Genetic Distance (FST)") +
+    theme( axis.text.x = element_text(face = "bold",colour = "black", size = 12),
+        axis.text.y = element_text(face = "bold", size = 11, colour = "black"),
+        axis.title= element_text(face = "bold", size = 14, colour = "black"),
+        panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "black"))
+mm
+```
+
+The Mantel correlation was significant, and the relationship not linear, hence the using the Spearman rank correlation rather than Pearson correlation.
+
+If you've gotten this far, complete the 5 follow up questions posted on Canvas.

@@ -24,48 +24,51 @@
 <body><div id="readme" class="container"><article class="markdown-body entry-content"><h2 id="read-mapping-and-variant-calling-rna-version"><strong>Read Mapping and Variant Calling- RNA version</strong></h2>
 <h3 id="1-read-quality-assessment">1. Read Quality Assessment</h3>
 <h4 id="fastqc-v-0-11-9"><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FastQC v 0.11.9</a></h4>
-<p> With any sequencing project, it is always a good idea to first assess the quality of the data we generated. We can use FastQC for
- this purpose.</p>
+<p> With any sequencing project, it is always a good idea to first assess the quality of the data we generated. We can use FastQC for this purpose.</p>
 <p>Let look at the <em>fastq</em>qual.sh_ script:</p>
 <pre><code># load modules
 module load FastQC/0.11.9-Java-11
 
 # change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
-USER=sak3097
-SAMPLE=
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+USER=kitchens
+DIR2=Project
 
 #create a new directory for the fastqc report
-mkdir ${DIR}/${USER}/fastqc_report
+mkdir ${DIR}/${USER}/${DIR2}/fastqc_report
 
 #run fastqc
-fastqc -o ${DIR}/${USER}/fastqc_report -f fastq -t 4 \
-${DIR}/${SAMPLE}_1.fastq.gz \
-${DIR}/${SAMPLE}_2.fastq.gz</code></pre><p>-o = output directory
+for SAMPLE in $(cat SRA.list); do
+        fastqc -o ${DIR}/${USER}/${DIR2}/fastqc_report -f fastq -t 4 \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_2.fastq
+done</code></pre><p>-o = output directory
 -f = fastq reads (can be fastq, bam or sam)
 <em>Approximate run time for all data from a single sample = 2-5 mins</em></p>
 <p>Then copy the html output to your local computer (Mac version below):</p>
-<pre><code>scp username@login.hprc.tamu.edu:/scratch/group/kitchen-group/class_working_directories/kitchens/fastqc_report/example_1_fastqc.html ./</code></pre><p>The html provides the summary statistics and various graphical representations of the data (Fig 2).</p>
+<pre><code>scp username@login.hprc.tamu.edu:/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/kitchens/fastqc_report/example_1_fastqc.html ./</code></pre><p>The html provides the summary statistics and various graphical representations of the data (Fig 2).</p>
 <p align="center"> <img src="./fastqc_ATT03.png" width="500">
 Figure 2. Sequence quality per base.
 
 </p><h3 id="2-read-filtering-and-trimming">2. Read filtering and trimming</h3>
-<p>Due to the adapter contamination found in the raw reads we need to clean them up. We can remove low quality base pairs at the tails of the reads as well as the Illumina adapters using <a href="https://cutadapt.readthedocs.io/en/stable/index.html">cutadapt v3.5</a>.</p>
+<p>Due to the adapter contamination found in the raw reads we need to clean them up. We can remove low quality base pairs at the tails of the reads as well as the Illumina adapters using <a href="https://cutadapt.readthedocs.io/en/stable/index.html">cutadapt v5.0</a>.</p>
 <pre><code>#load modules
-module load GCCcore/11.2.0
-module load cutadapt/3.5
+module load GCCcore/13.2.0
+module load cutadapt/5.0
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
 USER=kitchens
-SAMPLE=
+DIR2=Project
 
-# run cutadapt v3.5
-cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -m 50 -q 15 -j 0 \
--o ${DIR}/${USER}/${SAMPLE}_filtered_1.fastq \
--p ${DIR}/${USER}/${SAMPLE}_filtered_2.fastq \
-${DIR}/${USER}/${SAMPLE}_1.fastq.gz \
-${DIR}/${USER}/${SAMPLE}_2.fastq.gz</code></pre><p>-a/-A = adapter sequence
+# run cutadapt v5.0
+for SAMPLE in $(cat SRA.list); do
+        cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -m 50 -q 15 -j 0 \
+        -o ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_1.fastq \
+        -p ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_2.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_2.fastq
+done</code></pre><p>-a/-A = adapter sequence, if both are present this is paired end data
 -m = minimum length, reads shorter than defined length will be discarded
 -q = quality trim ends of the reads at 3&apos; end
 -j = number of cores to use, if set to 0 automatically detect available num. of threads
@@ -89,35 +92,40 @@ DDDDDIIIIIIIIIIIIIIIIIIIIIIIIIIIHIIIIIIIIIIIIIIIHIIIHIII1CGHI1FHIH1DGHI?HHI11&lt
 <p>These read mappers compare the reads against a reference sequence that has been transformed into a highly accessible data structure called a genome/transcriptome index. Such indexes should be generated before mapping begins. In our case, we will use STAR.</p>
 <p>We have already created a genome index as follows (<code>nano star_index.sh</code>):</p>
 <pre><code>#load modules
-module load GCC/11.2.0
-module load STAR/2.7.9a
+module load GCC/12.2.0
+module load STAR/2.7.10b
 
 # Change me!
 REFERENCE=Cassiopea
 
-STAR --runMode genomeGenerate --genomeDir /scratch/group/kitchen-group/map_reference/ \
+STAR --runMode genomeGenerate --genomeDir /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/ \
 --genomeFastaFiles ${REFERENCE}_genome.fa --genomeSAindexNbases 13 \
 --outFileNamePrefix ${REFERENCE}</code></pre><p>Now, we will run STAR tool on one sample like:</p>
 <pre><code>#load modules
-module load GCC/11.2.0
-module load STAR/2.7.9a
-module load SAMtools/1.14
+module load GCC/12.2.0
+module load STAR/2.7.10b
+module load SAMtools/1.17
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
 REFERENCE=Cassiopea
-SAMPLE=
+DIR3=/scratch/user/${USER}
 
 # command
-STAR --genomeDir /scratch/group/kitchen-group/map_reference/${REFERENCE}/ \
---runThreads 4 --readsFilesIn ${DIR}/${USER}/${SAMPLE}_filtered_1.fastq ${DIR}/${USER}/${SAMPLE}_filtered_2.fastq \
---outFileNamePrefix ${SAMPLE}_  --twopassMode Basic
+cd ${DIR3}
 
-# how good was the mapping
-samtools flagstat ${DIR}/${USER}/${SAMPLE}_Aligned.out.sam</code></pre><p>The number of threads to use is provided by &quot;--runThreads&quot;. To increase sensitivity of the alignments to the exon-exon junctions, we will run the &quot;--twopassMode&quot;. In this mode, the genome indices are re-generated from splice junctions obtained from a 1-pass mode with the usual parameters and then run the mapping step (2-pass mapping).</p>
+for SAMPLE in $(cat ${DIR}/${USER}/${DIR2}/SRA.list); do
+        STAR --genomeDir /scratch/group/kitchen-group/map_reference/${REFERENCE}/ \
+        --runThreadN 4 --readFilesIn ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_1.fastq ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_2.fastq \
+        --outFileNamePrefix ${SAMPLE}_  --twopassMode Basic
+
+        # how good was the mapping
+        samtools flagstat ${DIR3}/${SAMPLE}_Aligned.out.sam
+done</code></pre><p>The number of threads to use is provided by &quot;--runThreads&quot;. To increase sensitivity of the alignments to the exon-exon junctions, we will run the &quot;--twopassMode&quot;. In this mode, the genome indices are re-generated from splice junctions obtained from a 1-pass mode with the usual parameters and then run the mapping step (2-pass mapping).</p>
 <p>At the end, we run <a href="https://www.htslib.org/doc/samtools.html">samtools flagstat tool</a> to summarize the number of mapped reads to each category: primary, secondary, supplementary, duplicates, properly paired, singletons.</p>
-<p><strong>HOMEWORK</strong>: Make a table of number of all reads, filtered reads, mapped reads, and properly paired mapped reads.</p>
+<p><strong>HOMEWORK</strong>: Make a table of number of all reads, filtered reads, mapped reads, and properly paired mapped reads for your final report.</p>
 <h3 id="4-remove-pcr-duplicates">4. Remove PCR Duplicates</h3>
 <p>After the tool completes, the alignments will be stored in the Sequence Alignment Map (SAM) format, a standard for storing aligned reads. The SAM format is a generic nucleotide alignment format that describes the alignment of sequencing reads (or query sequences) to a reference. We will convert the SAM file into the binary form of the format (BAM), which is compact and can be rapidly searched (if indexed).</p>
 <p>We will use <a href="https://broadinstitute.github.io/picard/command-line-overview.html"><em>Picard Tools</em></a> to sort the SAM file by coordinates and convert it into the BAM format.</p>
@@ -134,30 +142,36 @@ samtools flagstat ${DIR}/${USER}/${SAMPLE}_Aligned.out.sam</code></pre><p>The nu
 module load picard/2.25.1-Java-11
 
 # change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
-SAMPLE=
+DIR3=/scratch/user/${USER}
 
 # add read group and sort the file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
-I=${DIR}/${USER}/${SAMPLE}_Aligned.out.sam O=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
-SO=coordinate \
-RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
+for SAMPLE in $(cat SRA.list); do
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
+        I=${DIR3}/${SAMPLE}_Aligned.out.sam O=${DIR3}/${SAMPLE}_rg_added_sorted.bam \
+        SO=coordinate \
+        RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
 
-# index the resulting bam file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
-I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam
+        # index the resulting bam file
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
+        I=${DIR3}/${SAMPLE}_rg_added_sorted.bam
 
-# remove duplicates
-java -Xmx16g -jar $EBROOTPICARD/picard.jar MarkDuplicates \
-TMP_DIR=${DIR}/${USER}/ \
-I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
-O=${DIR}/${USER}/${SAMPLE}_dedup.bam \
-METRICS_FILE=${DIR}/${USER}/${SAMPLE}_dedup.metrics_test.txt \
-REMOVE_DUPLICATES=false \
-TAGGING_POLICY=All \
-CREATE_INDEX=true</code></pre><p>Repeat the steps above for all your samples. Next Wednesday, <strong>November 8th</strong>, turn in your table of mapping statistics and write-up of methods from this section.</p>
-</article></div><div style="background-color: #b4b2b2;width: 50px;height:50px;line-height: 50px;text-align: center;position: fixed;bottom: 10px;right: 10px;padding-top:5px;" onclick="document.documentElement.scrollTop = document.body.scrollTop =0;">
+        # remove duplicates
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+        TMP_DIR=${DIR3}/ \
+        I=${DIR3}/${SAMPLE}_rg_added_sorted.bam \
+        O=${DIR3}/${SAMPLE}_dedup.bam \
+        METRICS_FILE=${DIR3}/${SAMPLE}_dedup.metrics_test.txt \
+        REMOVE_DUPLICATES=false \
+        TAGGING_POLICY=All \
+        CREATE_INDEX=true
+
+        # remove prior alignment files
+        rm ${DIR3}/${SAMPLE}_Aligned.out.sam
+        rm ${DIR3}/${SAMPLE}_rg_added_sorted.bam
+done</code></pre></article></div><div style="background-color: #b4b2b2;width: 50px;height:50px;line-height: 50px;text-align: center;position: fixed;bottom: 10px;right: 10px;padding-top:5px;" onclick="document.documentElement.scrollTop = document.body.scrollTop =0;">
   <svg t="1533629773982" class="icon" style="" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1035" xlink="http://www.w3.org/1999/xlink" width="40" height="40"><defs><style type="text/css">@font-face { font-family: uc-nexus-iconfont; src: url("chrome-extension://pogijhnlcfmcppgimcaccdkmbedjkmhi/res/font_9qmmi8b8jsxxbt9.woff") format("woff"), url("chrome-extension://pogijhnlcfmcppgimcaccdkmbedjkmhi/res/font_9qmmi8b8jsxxbt9.ttf") format("truetype"); }
   </style></defs><path d="M536.255427 195.182354c-7.804756-7.804756-17.966187-11.615549-28.311813-11.615549-9.43693 0-18.874883 3.449565-26.496467 10.163477-2.360767 1.452071-4.356214 3.267417-6.352685 5.262864L218.47792 455.611735c-15.607466 15.60542-15.607466 40.834011 0 56.43943 15.607466 15.607466 41.558511 15.607466 57.167001 0l193.46013-192.733583 0 600.526219c0 22.1423 17.787108 39.927361 39.927361 39.927361 22.140253 0 39.927361-17.785062 39.927361-39.927361L548.959773 319.317583 737.15704 508.422522c15.607466 15.607466 40.469714 15.607466 56.078203 0 15.607466-15.607466 15.425318-40.834011-0.182149-56.441477L536.255427 195.182354 536.255427 195.182354z" p-id="1036" fill="#333"/><path d="M101.784174 143.097092l816.674071 0c22.140253 0 39.925315-17.785062 39.925315-39.927361 0-22.140253-17.784038-39.925315-39.925315-39.925315L101.784174 63.244416c-22.140253 0-39.927361 17.785062-39.927361 39.925315C61.856813 125.31203 79.643921 143.097092 101.784174 143.097092L101.784174 143.097092z" p-id="1037" fill="#333"/></svg>
 </div>

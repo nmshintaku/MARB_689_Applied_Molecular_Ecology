@@ -1,0 +1,128 @@
+# load the module on Grace
+module load QIIME2/2024.10-Amplicon
+
+# Script for processing Illumina MiSeq samples from Jeunen et al. 2018. 
+# The samples processed are the single-end eukaryote COI samples.
+
+#Import sequence data that has already been demultiplexd. 
+qiime tools import \
+  --type 'SampleData[SequencesWithQuality]' \
+  --input-path ../../../12_amplicons/00-ANALYSIS/manifest.tsv \
+  --output-path single-end-demux.qza \
+  --input-format SingleEndFastqManifestPhred33V2
+
+# Import the COI database which is from NCBI
+qiime tools import \
+--input-path ../../../12_amplicons/00-ANALYSIS/MIDORI2_LONGEST_NUC_GB264_CO1_QIIME.fasta \
+--output-path MIDORI_COI_seq.qza \
+--type 'FeatureData[Sequence]'
+
+# Import the taxonomy table that is associated with the above database
+qiime tools import \
+--input-path ../../../12_amplicons/00-ANALYSIS/MIDORI2_LONGEST_NUC_GB264_CO1_QIIME.taxon \
+--output-path MIDORI_UNIQUE-COI.taxon.qza \
+--type 'FeatureData[Taxonomy]'
+
+# Visualizing the sequences. 
+qiime demux summarize \
+--i-data ./single-end-demux.qza \
+--o-visualization ./single-end-demux.qzv
+
+# Using the cutadapt module in Qiime2 to pre-trim the sequences
+qiime cutadapt trim-single \
+--i-demultiplexed-sequences ./single-end-demux.qza \
+--p-cores 4 \
+--p-front GGWACWGGWTGAACWGTWTAYCCYCC \
+--p-error-rate 0.1 \
+--p-match-adapter-wildcards \
+--p-match-read-wildcards \
+--o-trimmed-sequences trimmed.qza 
+
+# Using DADA2 to trim sequences and make outputs
+qiime dada2 denoise-single \
+--i-demultiplexed-seqs trimmed.qza \
+--o-representative-sequences rep-seq.qza \
+--o-denoising-stats denoising-stats.qza \
+--p-trunc-len 0 \
+--p-n-threads 4 \
+--o-table table.qza 
+
+# Visualizing the output of ASV assignment prior to moving on. 
+# Here, we'll see there are some sequences that dominate the data, which we will remove in the next steps.
+qiime feature-table summarize \
+  --i-table table.qza \
+  --o-visualization table.qzv
+
+qiime feature-table tabulate-seqs \
+  --i-data rep-seq.qza \
+  --o-visualization rep-seq.qzv
+
+qiime metadata tabulate \
+  --m-input-file denoising-stats.qza \
+  --o-visualization denoising-stats.qzv
+
+# Taxonomy assignment of the features
+qiime vsearch cluster-features-closed-reference --i-sequences rep-seq.qza \
+--i-table table.qza --i-reference-sequences MIDORI_COI_seq.qza --p-perc-identity .97 \
+--o-clustered-table closed-97_clustered-table --o-clustered-sequences closed-97_clustered-seq \
+--o-unmatched-sequences closed-97_unmatched-seq
+
+# Filtering the data
+# We will perform multiple filtering steps. 
+# A) Filter out abundant chlorophytes
+qiime taxa filter-table --i-table closed-97_clustered-table.qza --i-taxonomy MIDORI_UNIQUE-COI.taxon.qza \
+--p-exclude "Chlorophyta" \
+--o-filtered-table table-filtered.qza
+
+# B) We want to filter samples that don't meet our read count criteria. 
+qiime feature-table filter-samples --i-table table-filtered.qza \
+--p-min-frequency 50 --o-filtered-table table-filtered_2.qza
+
+# C) We want to remove low abundance filters. We will run parameters to filter out singletons, but depending on your questions, 
+#    you may choose to remove at greater frequencies.
+qiime feature-table filter-features --i-table table-filtered_2.qza \
+--p-min-samples 2 --p-min-frequency 2 --o-filtered-table table-filtered_3.qza
+
+# Diversity analysis
+# Back to the actual file creation! Making a taxonomic tree of samples using mafft.
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences closed-97_clustered-seq.qza \
+  --o-alignment aligned-seqs.qza \
+  --o-masked-alignment aligned-seqs.masked.qza \
+  --o-tree unrooted-tree.qza \
+  --o-rooted-tree rooted-tree.qza
+
+# Now making a summary of core taxon. 
+qiime diversity core-metrics-phylogenetic \
+  --p-sampling-depth 100 \
+  --i-phylogeny rooted-tree.qza \
+  --i-table table-filtered_3.qza \
+  --m-metadata-file ../../../12_amplicons/00-ANALYSIS/metadata.txt \
+  --output-dir core-metrics-results
+
+# rarefaction curve
+qiime diversity alpha-rarefaction \
+  --i-table table-filtered_3.qza \
+  --i-phylogeny rooted-tree.qza \
+  --p-max-depth 100 \
+  --m-metadata-file ../../../12_amplicons/00-ANALYSIS/metadata.txt \
+  --o-visualization alpha-rarefaction.qzv
+
+# export data for phyloseq
+# unzip the table file
+unzip table-filtered_3.qza
+
+# move into the directory that is generated
+cd [extracted folder]/data/
+# run the command below
+biom convert -i feature-table.biom -o feature-table.txt --to-tsv 
+
+# copy data up multiple directories
+cp feature-table.* ../../
+
+# move back up two directories and repeat the process for the tree data
+cd ../../
+unzip rooted-tree.qza
+
+cd [extracted folder]/data/
+cp tree.nwk ../../

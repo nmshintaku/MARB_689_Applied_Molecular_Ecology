@@ -13,12 +13,11 @@ module load Java/17.0.2
 module load BLAST+/2.8.1
 
 # Change the information below
-USER=kitchens
+USER=kylee.patterson
 SPECIMEN=A
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology
 
 # Don't touch
-/scratch/group/kitchen-group/02_mitogenome/MitoFinder/mitofinder -j ${SPECIMEN}_unknown \
--a /scratch/group/kitchen-group/02_mitogenome/specimen${SPECIMEN}_mitogenome.fasta \
--r /scratch/group/kitchen-group/02_mitogenome/reference.gb -o 5 -p 8 -m 32
-
-
+/scratch/group/kitchen-group/lab/tools/MitoFinder/mitofinder -j ${SPECIMEN}_unknown \
+-a ${DIR}/02_mitogenome/specimen${SPECIMEN}_mitogenome.fasta \
+-r ${DIR}/02_mitogenome/reference.gb -o 5 -p 8 -m 32

@@ -41,68 +41,67 @@ The variants are identified in this step by:
 #load modules
 module load GCCcore/11.2.0
 module load GATK/4.2.6.1-Java-11
-module load SAMtools/1.14
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
 USER=kitchens
+DIR2=Project
+DIR3=/scratch/user/${USER}
 REFERENCE=Cassiopea
-SAMPLE=
 
-mkdir ${DIR}/${USER}/gvcfs
+mkdir ${DIR3}/gvcfs
 
-#variant calling
-gatk HaplotypeCaller \
---java-options "-Xmx32g -XX:ParallelGCThreads=8" \
---min-pruning 1 \
---min-dangling-branch-length 1 \
--R ${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
--I ${DIR}/${USER}/${SAMPLE}_dedup.bam \
--O  ${DIR}/${USER}/gvcfs/${SAMPLE}.raw.g.vcf \
--ERC GVCF
+while read -r SAMPLE; do
+        gatk SplitNCigarReads \
+        -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+        -I ${DIR3}/${SAMPLE}_dedup.bam \
+        -O ${DIR3}/${SAMPLE}_dedup_MQ_split.bam
+done < SRA.list
+
+#variant calling for each sample
+while read -r SAMPLE; do
+        gatk HaplotypeCaller \
+        --java-options "-Xmx48g -XX:ParallelGCThreads=8" \
+        --dont-use-soft-clipped-bases true -stand-call-conf 20.0 \
+        -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+        -I ${DIR3}/${SAMPLE}_dedup_MQ_split.bam \
+        -O ${DIR3}/gvcfs/${SAMPLE}_new.raw.g.vcf \
+        -ERC GVCF
+done < SRA.list
 ```
 
 *Note, for low-coverage data, it is recommended to change the defaults for two options: --min-pruning 1 and --min-dangling-branch-length 1. These commands ensure that any paths in the sample graph are only dropped if there is no coverage. Otherwise the defaults of 2 and 4 respectively, will drop low-coverage regions.
 
-Repeat the steps above for all the samples in your respective data set.
-
 ### Joint genotyping across samples
 Once you have run HaplotypeCaller on your cohort of samples, the resulting GVCFs need to be combined using CombineGVCFs. GenotypeGVCFs is then used to perform joint genotyping and produce a multi-sample variant call-set from your GVCF files. This tool performs the multi-sample joint aggregation step and merges the records together in a sophisticated manner: at each position of the input gVCFs, this tool will combine all spanning records, produce correct genotype likelihoods, re-genotype the newly merged record, and then re-annotate it.
 
-Combine the GVCF files first.
-Example:
 ```
 #load modules
-module load GCCcore/11.2.0
-module load GATK/4.2.6.1-Java-11
+module load GCCcore/12.3.0
+module load GATK/4.5.0.0-Java-17
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
+DIR3=/scratch/user/${USER}
 REFERENCE=Cassiopea
 
+# combine GVCFs
 gatk CombineGVCFs \
 --java-options "-Xmx16g" \
--R ${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
---variant ${DIR}/${USER}/gvcfs/BS1_S13.raw.g.vcf \
---variant ${DIR}/${USER}/gvcfs/BS3_S14.raw.g.vcf \
---variant ${DIR}/${USER}/gvcfs/BS7_S18.raw.g.vcf \
---variant ${DIR}/${USER}/gvcfs/BS8_S19.raw.g.vcf \
---variant ${DIR}/${USER}/gvcfs/BS9_S20.raw.g.vcf \
---variant ${DIR}/${USER}/gvcfs/BS10_S21.raw.g.vcf \
--O ${DIR}/${USER}/gvcfs/all_${REFERENCE}.g.vcf
-```
+-R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+--variant gvcfs.list \
+-O ${DIR3}/gvcfs/all_${REFERENCE}.g.vcf
 
-Then, perform the joint genotyping:
-```
+# joint genotyping
 gatk GenotypeGVCFs \
 --java-options "-Xmx16g -XX:ParallelGCThreads=4" \
--nt 4 \
--R ${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+-R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
 --heterozygosity 0.015 \
--indelHeterozygosity 0.01 \
--V ${DIR}/${USER}/gvcfs/all_${REFERENCE}.g.vcf \
--O ${DIR}/${USER}/final_${REFERENCE}.vcf
+--indelHeterozygosity 0.01 \
+-V ${DIR3}/gvcfs/all_${REFERENCE}.g.vcf \
+-O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf
 ```
 
 ### Split SNPS from INDELs
@@ -111,31 +110,34 @@ By default, GATK outputs all SNP and indel variants, but we would like to filter
 Select SNPs:
 ```
 gatk SelectVariants \
---java-options "-Xmx16g -XX:ParallelGCThreads=2" \
--R ${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
--V ${DIR}/${USER}/final_${REFERENCE}.vcf \
+--java-options "-Xmx16g -XX:ParallelGCThreads=4" \
+-R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+-V ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf \
 -selectType SNP \
--O ${DIR}/${USER}/final_${REFERENCE}_SNPs.vcf
+-O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_SNPs.vcf
 ```
 
 Select Indels:
 ```
 gatk SelectVariants \
---java-options "-Xmx16g -XX:ParallelGCThreads=2" \
--R ${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
--V ${DIR}/${USER}/final_${REFERENCE}.vcf \
+--java-options "-Xmx16g -XX:ParallelGCThreads=4" \
+-R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+-V ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf \
 -selectType INDEL \
--O ${DIR}/${USER}/final_${REFERENCE}_INDELs.vcf
+-O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_INDELs.vcf
 ```
 
 ### How many SNPs and INDELs?
 ```
 #load modules
-module load BCFtools/1.14
+module purge
+module load GCC/13.2.0
+module load BCFtools/1.19
+module load VCFtools/0.1.16
 
-bcftools stats ${DIR}/${USER}/final_${REFERENCE}_SNPs.vcf > ALL_${REFERENCE}_SNPs.stats
 
-bcftools stats ${DIR}/${USER}/final_${REFERENCE}_INDELs.vcf > ALL_${REFERENCE}_INDELs.stats
+bcftools stats ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_SNPs.vcf > ALL_${REFERENCE}_SNPs.stats
+bcftools stats ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_INDELs.vcf > ALL_${REFERENCE}_INDELs.stats
 ```
 
 Let's look at the log files for the run.
@@ -151,17 +153,8 @@ We would like to filter the variants such that they are "high-quality". We will 
 
 For SNPs:
 ```
-#load modules
-module load BCFtools/1.14
-module load VCFtools/0.1.16
-
-# Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
-USER=kitchens
-REFERENCE=Cassiopea
-
 #filter for biallelic sites
-bcftools view -O v --threads 2 -m2 -M2 -v snps -o biallelic_snp_${REFERENCE}.vcf ${DIR}/${USER}/final_${REFERENCE}_SNPs.vcf
+bcftools view -O v --threads 2 -m2 -M2 -v snps -o biallelic_snp_${REFERENCE}.vcf ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_SNPs.vcf
 
 #quality filter SNPs
 bcftools filter -i 'MQ > 30 & INFO/DP < 1200 & QD > 2.0 & FS < 60.0 & MQRankSum > -12.5 & ReadPosRankSum > -8.0 & ReadPosRankSum < 10.0 & SOR < 3.0' \
@@ -177,6 +170,5 @@ bcftools stats hqfilter_rd2_snp_${REFERENCE}.recode.vcf > hqfilter_${REFERENCE}_
 Now how many are left??
 
 ## **Now to analyze the SNPs**
-
 For detailed presentation on the prior and current steps, see: https://hprc.tamu.edu/files/training/2023/Spring/IntroductionToShortVariantDiscovery_2023_spring.pdf
 Another useful resource: https://hprc.tamu.edu/kb/Software/Bioinformatics/Sequence_Variants/

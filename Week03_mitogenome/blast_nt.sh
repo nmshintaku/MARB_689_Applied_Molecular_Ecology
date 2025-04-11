@@ -13,13 +13,15 @@ module load BLAST+/2.12.0
 USER=kitchens
 SPECIMEN=A
 sequence=Seed.fasta
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology
 
 # Don't touch
 # run blast
-blastn -query ${sequence} -db /scratch/data/bio/blast/nt -max_target_seqs 10 -num_threads 4 \
+mkdir blast
+cd blast
+
+blastn -query ../${sequence} -db ${DIR}/02_mitogenome/mtDNA -max_target_seqs 10 -num_threads 4 \
 -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle staxids" > report_specimen${SPECIMEN}.txt
 
 # sort blast results for top hit by bitscore and e-value
 sort -k1,1 -k12,12nr -k11,11n report_specimen${SPECIMEN}.txt | sort -u -k1,1 --merge > tophit_specimen${SPECIMEN}.txt
-
-

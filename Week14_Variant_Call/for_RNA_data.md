@@ -2,8 +2,7 @@
 
 ### 1. Read Quality Assessment
 #### [FastQC v 0.11.9](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
- With any sequencing project, it is always a good idea to first assess the quality of the data we generated. We can use FastQC for
- this purpose.
+ With any sequencing project, it is always a good idea to first assess the quality of the data we generated. We can use FastQC for this purpose.
 
 Let look at the _fastq_qual.sh_ script:
 ```
@@ -11,17 +10,19 @@ Let look at the _fastq_qual.sh_ script:
 module load FastQC/0.11.9-Java-11
 
 # change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
-USER=sak3097
-SAMPLE=
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+USER=kitchens
+DIR2=Project
 
 #create a new directory for the fastqc report
-mkdir ${DIR}/${USER}/fastqc_report
+mkdir ${DIR}/${USER}/${DIR2}/fastqc_report
 
 #run fastqc
-fastqc -o ${DIR}/${USER}/fastqc_report -f fastq -t 4 \
-${DIR}/${SAMPLE}_1.fastq.gz \
-${DIR}/${SAMPLE}_2.fastq.gz
+for SAMPLE in $(cat SRA.list); do
+        fastqc -o ${DIR}/${USER}/${DIR2}/fastqc_report -f fastq -t 4 \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_2.fastq
+done
 ```
 -o = output directory
 -f = fastq reads (can be fastq, bam or sam)
@@ -29,7 +30,7 @@ ${DIR}/${SAMPLE}_2.fastq.gz
 
 Then copy the html output to your local computer (Mac version below):
 ```
-scp username@login.hprc.tamu.edu:/scratch/group/kitchen-group/class_working_directories/kitchens/fastqc_report/example_1_fastqc.html ./
+scp username@login.hprc.tamu.edu:/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/kitchens/fastqc_report/example_1_fastqc.html ./
 ```
 
 The html provides the summary statistics and various graphical representations of the data (Fig 2).
@@ -38,26 +39,28 @@ The html provides the summary statistics and various graphical representations o
 Figure 2. Sequence quality per base.
 
 ### 2. Read filtering and trimming
-Due to the adapter contamination found in the raw reads we need to clean them up. We can remove low quality base pairs at the tails of the reads as well as the Illumina adapters using [cutadapt v3.5](https://cutadapt.readthedocs.io/en/stable/index.html).
+Due to the adapter contamination found in the raw reads we need to clean them up. We can remove low quality base pairs at the tails of the reads as well as the Illumina adapters using [cutadapt v5.0](https://cutadapt.readthedocs.io/en/stable/index.html).
 
 ```
 #load modules
-module load GCCcore/11.2.0
-module load cutadapt/3.5
+module load GCCcore/13.2.0
+module load cutadapt/5.0
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
 USER=kitchens
-SAMPLE=
+DIR2=Project
 
-# run cutadapt v3.5
-cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -m 50 -q 15 -j 0 \
--o ${DIR}/${USER}/${SAMPLE}_filtered_1.fastq \
--p ${DIR}/${USER}/${SAMPLE}_filtered_2.fastq \
-${DIR}/${USER}/${SAMPLE}_1.fastq.gz \
-${DIR}/${USER}/${SAMPLE}_2.fastq.gz
+# run cutadapt v5.0
+for SAMPLE in $(cat SRA.list); do
+        cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -m 50 -q 15 -j 0 \
+        -o ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_1.fastq \
+        -p ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_2.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_2.fastq
+done
 ```
--a/-A = adapter sequence
+-a/-A = adapter sequence, if both are present this is paired end data
 -m = minimum length, reads shorter than defined length will be discarded
 -q = quality trim ends of the reads at 3' end
 -j = number of cores to use, if set to 0 automatically detect available num. of threads
@@ -88,13 +91,13 @@ These read mappers compare the reads against a reference sequence that has been 
 We have already created a genome index as follows (`nano star_index.sh`):
 ```
 #load modules
-module load GCC/11.2.0
-module load STAR/2.7.9a
+module load GCC/12.2.0
+module load STAR/2.7.10b
 
 # Change me!
 REFERENCE=Cassiopea
 
-STAR --runMode genomeGenerate --genomeDir /scratch/group/kitchen-group/map_reference/ \
+STAR --runMode genomeGenerate --genomeDir /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/ \
 --genomeFastaFiles ${REFERENCE}_genome.fa --genomeSAindexNbases 13 \
 --outFileNamePrefix ${REFERENCE}
 ```
@@ -102,30 +105,35 @@ STAR --runMode genomeGenerate --genomeDir /scratch/group/kitchen-group/map_refer
 Now, we will run STAR tool on one sample like:
 ```
 #load modules
-module load GCC/11.2.0
-module load STAR/2.7.9a
-module load SAMtools/1.14
+module load GCC/12.2.0
+module load STAR/2.7.10b
+module load SAMtools/1.17
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
 REFERENCE=Cassiopea
-SAMPLE=
+DIR3=/scratch/user/${USER}
 
 # command
-STAR --genomeDir /scratch/group/kitchen-group/map_reference/${REFERENCE}/ \
---runThreads 4 --readsFilesIn ${DIR}/${USER}/${SAMPLE}_filtered_1.fastq ${DIR}/${USER}/${SAMPLE}_filtered_2.fastq \
---outFileNamePrefix ${SAMPLE}_  --twopassMode Basic
+cd ${DIR3}
 
-# how good was the mapping
-samtools flagstat ${DIR}/${USER}/${SAMPLE}_Aligned.out.sam
+for SAMPLE in $(cat ${DIR}/${USER}/${DIR2}/SRA.list); do
+        STAR --genomeDir /scratch/group/kitchen-group/map_reference/${REFERENCE}/ \
+        --runThreadN 4 --readFilesIn ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_1.fastq ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_2.fastq \
+        --outFileNamePrefix ${SAMPLE}_  --twopassMode Basic
+
+        # how good was the mapping
+        samtools flagstat ${DIR3}/${SAMPLE}_Aligned.out.sam
+done
 ```
 
 The number of threads to use is provided by "--runThreads". To increase sensitivity of the alignments to the exon-exon junctions, we will run the "--twopassMode". In this mode, the genome indices are re-generated from splice junctions obtained from a 1-pass mode with the usual parameters and then run the mapping step (2-pass mapping).
 
 At the end, we run [samtools flagstat tool](https://www.htslib.org/doc/samtools.html) to summarize the number of mapped reads to each category: primary, secondary, supplementary, duplicates, properly paired, singletons.
 
-__HOMEWORK__: Make a table of number of all reads, filtered reads, mapped reads, and properly paired mapped reads.
+__HOMEWORK__: Make a table of number of all reads, filtered reads, mapped reads, and properly paired mapped reads for your final report.
 
 ### 4. Remove PCR Duplicates
 After the tool completes, the alignments will be stored in the Sequence Alignment Map (SAM) format, a standard for storing aligned reads. The SAM format is a generic nucleotide alignment format that describes the alignment of sequencing reads (or query sequences) to a reference. We will convert the SAM file into the binary form of the format (BAM), which is compact and can be rapidly searched (if indexed).
@@ -148,29 +156,34 @@ Run MarkDuplicates tool on the BAM files. This tool with have two outputs, a new
 module load picard/2.25.1-Java-11
 
 # change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
-SAMPLE=
+DIR3=/scratch/user/${USER}
 
 # add read group and sort the file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
-I=${DIR}/${USER}/${SAMPLE}_Aligned.out.sam O=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
-SO=coordinate \
-RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
+for SAMPLE in $(cat SRA.list); do
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
+        I=${DIR3}/${SAMPLE}_Aligned.out.sam O=${DIR3}/${SAMPLE}_rg_added_sorted.bam \
+        SO=coordinate \
+        RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
 
-# index the resulting bam file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
-I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam
+        # index the resulting bam file
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
+        I=${DIR3}/${SAMPLE}_rg_added_sorted.bam
 
-# remove duplicates
-java -Xmx16g -jar $EBROOTPICARD/picard.jar MarkDuplicates \
-TMP_DIR=${DIR}/${USER}/ \
-I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
-O=${DIR}/${USER}/${SAMPLE}_dedup.bam \
-METRICS_FILE=${DIR}/${USER}/${SAMPLE}_dedup.metrics_test.txt \
-REMOVE_DUPLICATES=false \
-TAGGING_POLICY=All \
-CREATE_INDEX=true
+        # remove duplicates
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+        TMP_DIR=${DIR3}/ \
+        I=${DIR3}/${SAMPLE}_rg_added_sorted.bam \
+        O=${DIR3}/${SAMPLE}_dedup.bam \
+        METRICS_FILE=${DIR3}/${SAMPLE}_dedup.metrics_test.txt \
+        REMOVE_DUPLICATES=false \
+        TAGGING_POLICY=All \
+        CREATE_INDEX=true
+
+        # remove prior alignment files
+        rm ${DIR3}/${SAMPLE}_Aligned.out.sam
+        rm ${DIR3}/${SAMPLE}_rg_added_sorted.bam
+done
 ```
-
-Repeat the steps above for all your samples. Next Wednesday, **November 8th**, turn in your table of mapping statistics and write-up of methods from this section.

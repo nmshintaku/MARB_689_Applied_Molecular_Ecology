@@ -7,9 +7,9 @@ K-mer                 = 33
 Max memory            = 48
 Extended log          = 0
 Save assembled reads  = no
-Seed Input            = /scratch/group/kitchen-group/02_mitogenome/Seed.fasta
+Seed Input            = /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/02_mitogenome/Seed.fasta
 Extend seed directly  = no
-Reference sequence    = /scratch/group/kitchen-group/02_mitogenome/reference.fasta
+Reference sequence    = /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/02_mitogenome/reference.fasta
 Variance detection    = yes
 Chloroplast sequence  = 
 
@@ -20,8 +20,8 @@ Insert size           = 300
 Platform              = illumina
 Single/Paired         = PE
 Combined reads        = 
-Forward reads         = C_subset_filtered_R1.fastq
-Reverse reads         = C_subset_filtered_R2.fastq
+Forward reads         = ../C_subset_filtered_R1.fastq
+Reverse reads         = ../C_subset_filtered_R2.fastq
 Store Hash            =
 
 Heteroplasmy:

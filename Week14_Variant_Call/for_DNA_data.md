@@ -11,17 +11,19 @@ Let look at the _fastq_qual.sh_ script:
 module load FastQC/0.11.9-Java-11
 
 # change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
-USER=sak3097
-SAMPLE=
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+USER=kitchens
+DIR2=Project
 
 #create a new directory for the fastqc report
-mkdir ${DIR}/${USER}/fastqc_report
+mkdir ${DIR}/${USER}/${DIR2}/fastqc_report
 
 #run fastqc
-fastqc -o ${DIR}/${USER}/fastqc_report -f fastq -t 4 \
-${DIR}/${SAMPLE}_1.fastq.gz \
-${DIR}/${SAMPLE}_2.fastq.gz
+for SAMPLE in $(cat SRA.list); do
+        fastqc -o ${DIR}/${USER}/${DIR2}/fastqc_report -f fastq -t 4 \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_2.fastq
+done
 ```
 -o = output directory
 -f = fastq reads (can be fastq, bam or sam)
@@ -29,7 +31,7 @@ ${DIR}/${SAMPLE}_2.fastq.gz
 
 Then copy the html output to your local computer (Mac version below):
 ```
-scp username@login.hprc.tamu.edu:/scratch/group/kitchen-group/class_working_directories/kitchens/fastqc_report/example_1_fastqc.html ./
+scp username@login.hprc.tamu.edu:/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories/kitchens/fastqc_report/example_1_fastqc.html ./
 ```
 
 The html provides the summary statistics and various graphical representations of the data (Fig 2).
@@ -38,24 +40,26 @@ The html provides the summary statistics and various graphical representations o
 Figure 2. Sequence quality per base.
 
 ### 2. Read filtering and trimming
-Due to the adapter contamination found in the raw reads we need to clean them up. We can remove low quality base pairs at the tails of the reads as well as the Illumina adapters using [cutadapt v3.5](https://cutadapt.readthedocs.io/en/stable/index.html).
+Due to the adapter contamination found in the raw reads we need to clean them up. We can remove low quality base pairs at the tails of the reads as well as the Illumina adapters using [cutadapt v5](https://cutadapt.readthedocs.io/en/stable/index.html).
 
 ```
 #load modules
-module load GCCcore/11.2.0
-module load cutadapt/3.5
+module load GCCcore/13.2.0
+module load cutadapt/5.0
 
 # Change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
 USER=kitchens
-SAMPLE=
+DIR2=Project
 
-# run cutadapt v3.5
-cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -m 50 -q 15 -j 0 \
--o ${DIR}/${USER}/${SAMPLE}_filtered_1.fastq \
--p ${DIR}/${USER}/${SAMPLE}_filtered_2.fastq \
-${DIR}/${USER}/${SAMPLE}_1.fastq.gz \
-${DIR}/${USER}/${SAMPLE}_2.fastq.gz
+# run cutadapt v5.0
+for SAMPLE in $(cat SRA.list); do
+        cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -m 50 -q 15 -j 0 \
+        -o ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_1.fastq \
+        -p ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_2.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_2.fastq
+done
 ```
 -a/-A = adapter sequence
 -m = minimum length, reads shorter than defined length will be discarded
@@ -89,37 +93,41 @@ These read mappers compare the reads against a reference sequence that has been 
 We have already created a genome index as follows (`nano bwa_index.sh`):
 ```
 #load correct python module
-module load  bwa-mem2/2.2.1-Linux64
+module load bwa-mem2/2.2.1-Linux64
 
 # change me!
 REFERENCE=hammerhead
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}
 
 # index the genome- already done for you!
-bwa-mem2 index ${REFERENCE}_genome.fa
+bwa-mem2 index ${DIR}/${REFERENCE}_genome.fa
 ```
 
 Now, we will run BWA-MEM tool on one sample like:
 ```
 #load correct python module
 module load bwa-mem2/2.2.1-Linux64
-module load GCC/11.3.0
+module load GCC/12.2.0
 module load SAMtools/1.17
 
 # change me!
 REFERENCE=hammerhead
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
-SAMPLE=
+DIR3=/scratch/user/${USER}
 
 # align reads
-bwa-mem2 mem -M -t 4 -R $(echo "@RG\tID:MARB689\tLB:${SAMPLE}\tPL:ILLUMINA\tPM:HISEQ\tSM:${SAMPLE}") \
-/scratch/group/kitchen-group/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
-${DIR}/${USER}/${SAMPLE}_filtered_1.fastq \
-${DIR}/${USER}/${SAMPLE}_filtered_2.fastq  \
-> ${DIR}/${USER}/${SAMPLE}_aligned.sam
+for SAMPLE in $(cat ${DIR}/${USER}/${DIR2}/SRA.list); do
+        bwa-mem2 mem -M -t 4 -R $(echo "@RG\tID:MARB689\tLB:${SAMPLE}\tPL:ILLUMINA\tPM:HISEQ\tSM:${SAMPLE}") \
+        /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_1.fastq \
+        ${DIR}/${USER}/${DIR2}/${SAMPLE}_filtered_2.fastq  \
+        > ${DIR3}/${SAMPLE}_aligned.sam
 
-# how good was the mapping
-samtools flagstat ${DIR}/${USER}/${SAMPLE}_aligned.sam
+        # how good was the mapping
+        samtools flagstat ${DIR3}/${SAMPLE}_aligned.sam
+done
 ```
 
 The "-M" will mark shorter alignments as secondary that can be parsed later to remove duplicate alignments. The number of threads to use is provided by "-t". As a way to track the samples, we will assign a read group identifier using the "-R" parameter. The read group (RG) assignment for each sample requires the following information:
@@ -147,29 +155,34 @@ Run MarkDuplicates tool on the BAM files. This tool with have two outputs, a new
 module load picard/2.25.1-Java-11
 
 # change me!
-DIR=/scratch/group/kitchen-group/class_working_directories
+DIR=/scratch/group/kitchen-group/MARB_689_Molecular_Ecology/class_working_directories
+DIR2=Project
 USER=kitchens
-SAMPLE=
+DIR3=/scratch/user/${USER}
 
 # add read group and sort the file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
-I=${DIR}/${USER}/${SAMPLE}_Aligned.out.sam O=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
-SO=coordinate \
-RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
+for SAMPLE in $(cat SRA.list); do
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
+        I=${DIR3}/${SAMPLE}_aligned.sam O=${DIR3}/${SAMPLE}_rg_added_sorted.bam \
+        SO=coordinate \
+        RGID=MARB689 RGLB=${SAMPLE} RGPL=ILLUMINA RGPM=HISEQ RGSM=${SAMPLE}
 
-# index the resulting bam file
-java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
-I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam
+        # index the resulting bam file
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar BuildBamIndex \
+        I=${DIR3}/${SAMPLE}_rg_added_sorted.bam
 
-#remove duplicates
-java -Xmx16g -jar $EBROOTPICARD/picard.jar \
-MarkDuplicates TMP_DIR=${DIR}/${USER}/ \
-I=${DIR}/${USER}/${SAMPLE}_rg_added_sorted.bam \
-O=${DIR}/${USER}/${SAMPLE}_dedup.bam \
-METRICS_FILE=${DIR}/${USER}/${SAMPLE}_dedup.metrics_test.txt \
-REMOVE_DUPLICATES=false \
-TAGGING_POLICY=All \
-CREATE_INDEX=true
+        # remove duplicates
+        java -Xmx16g -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+        TMP_DIR=${DIR3}/ \
+        I=${DIR3}/${SAMPLE}_rg_added_sorted.bam \
+        O=${DIR3}/${SAMPLE}_dedup.bam \
+        METRICS_FILE=${DIR3}/${SAMPLE}_dedup.metrics_test.txt \
+        REMOVE_DUPLICATES=false \
+        TAGGING_POLICY=All \
+        CREATE_INDEX=true
+
+        # remove prior alignment files
+        rm ${DIR3}/${SAMPLE}_aligned.out.sam
+        rm ${DIR3}/${SAMPLE}_rg_added_sorted.bam
+done
 ```
-
-Repeat the steps above for all your samples. Next Wednesday, **November 8th**, turn in your table of mapping statistics and write-up of methods from this section.

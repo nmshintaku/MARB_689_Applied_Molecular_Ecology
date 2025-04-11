@@ -11,6 +11,6 @@ USER=kitchens
 SPECIMEN=A
 
 # Don't touch
-
-perl /scratch/group/kitchen-group/02_mitogenome/NOVOPlasty4.3.3/NOVOPlasty4.3.3.pl -c config_specimen${SPECIMEN}.txt
-
+mkdir assembly_${SPECIMEN}
+cd assembly_${SPECIMEN}
+perl /scratch/group/kitchen-group/lab/tools/NOVOPlasty4.3.3/NOVOPlasty4.3.3.pl -c ../config_specimen${SPECIMEN}.txt
