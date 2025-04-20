@@ -15,7 +15,7 @@ The minimum options needed are a reference genome, BAM files for each sample, an
 
 
 #### Genome/Transcriptome index for GATK
-We need to create an index for picard.
+We need to create an index for picard. This already done for you!
 ```
 #load modules
 module load SAMtools/1.14
@@ -36,7 +36,8 @@ O=${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.dict
 ```
 
 #### Individual sample variant calling
-The variants are identified in this step by:
+The variants are identified in this step by `haploCall_update.sh`:
+
 ```
 #load modules
 module load GCCcore/11.2.0
@@ -75,6 +76,12 @@ done < SRA.list
 ### Joint genotyping across samples
 Once you have run HaplotypeCaller on your cohort of samples, the resulting GVCFs need to be combined using CombineGVCFs. GenotypeGVCFs is then used to perform joint genotyping and produce a multi-sample variant call-set from your GVCF files. This tool performs the multi-sample joint aggregation step and merges the records together in a sophisticated manner: at each position of the input gVCFs, this tool will combine all spanning records, produce correct genotype likelihoods, re-genotype the newly merged record, and then re-annotate it.
 
+You will need to make a `gvcfs.list` as so:
+```
+find /scratch/user/[netID]/gvcfs/ -type f -name "*.vcf.gz" > gvcfs.list
+```
+
+Then run `jg_gatk.sh`
 ```
 #load modules
 module load GCCcore/12.3.0
@@ -98,7 +105,6 @@ gatk CombineGVCFs \
 gatk GenotypeGVCFs \
 --java-options "-Xmx16g -XX:ParallelGCThreads=4" \
 -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
---heterozygosity 0.015 \
 --indelHeterozygosity 0.01 \
 -V ${DIR3}/gvcfs/all_${REFERENCE}.g.vcf \
 -O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf
@@ -113,7 +119,7 @@ gatk SelectVariants \
 --java-options "-Xmx16g -XX:ParallelGCThreads=4" \
 -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
 -V ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf \
--selectType SNP \
+-select-type SNP \
 -O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_SNPs.vcf
 ```
 
@@ -123,7 +129,7 @@ gatk SelectVariants \
 --java-options "-Xmx16g -XX:ParallelGCThreads=4" \
 -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
 -V ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf \
--selectType INDEL \
+-select-type INDEL \
 -O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_INDELs.vcf
 ```
 

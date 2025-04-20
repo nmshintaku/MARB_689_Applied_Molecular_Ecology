@@ -31,7 +31,7 @@ Figure 3. GATK workflow.</p>
 Figure 4. GATK workflow.</p>
 <p>The minimum options needed are a reference genome, BAM files for each sample, and output file name. Note that this process can be computationally intensive. The output for this program will be a GVCF, which has raw, unfiltered SNP and indel calls for all sites, variant or invariant. This is specified by the -ERC GVCF command, with an example below.</p>
 <h4 id="genome-transcriptome-index-for-gatk">Genome/Transcriptome index for GATK</h4>
-<p>We need to create an index for picard.</p>
+<p>We need to create an index for picard. This already done for you!</p>
 <pre><code>#load modules
 module load SAMtools/1.14
 module load picard/2.25.1-Java-11
@@ -48,7 +48,7 @@ samtools faidx ${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa
 java -Xmx16g -jar $EBROOTPICARD/picard.jar CreateSequenceDictionary \
 R=${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
 O=${DIR}/map_reference/${REFERENCE}/${REFERENCE}_genome.dict</code></pre><h4 id="individual-sample-variant-calling">Individual sample variant calling</h4>
-<p>The variants are identified in this step by:</p>
+<p>The variants are identified in this step by <code>haploCall_update.sh</code>:</p>
 <pre><code>#load modules
 module load GCCcore/11.2.0
 module load GATK/4.2.6.1-Java-11
@@ -81,6 +81,8 @@ while read -r SAMPLE; do
 done &lt; SRA.list</code></pre><p>*Note, for low-coverage data, it is recommended to change the defaults for two options: --min-pruning 1 and --min-dangling-branch-length 1. These commands ensure that any paths in the sample graph are only dropped if there is no coverage. Otherwise the defaults of 2 and 4 respectively, will drop low-coverage regions.</p>
 <h3 id="joint-genotyping-across-samples">Joint genotyping across samples</h3>
 <p>Once you have run HaplotypeCaller on your cohort of samples, the resulting GVCFs need to be combined using CombineGVCFs. GenotypeGVCFs is then used to perform joint genotyping and produce a multi-sample variant call-set from your GVCF files. This tool performs the multi-sample joint aggregation step and merges the records together in a sophisticated manner: at each position of the input gVCFs, this tool will combine all spanning records, produce correct genotype likelihoods, re-genotype the newly merged record, and then re-annotate it.</p>
+<p>You will need to make a <code>gvcfs.list</code> as so:</p>
+<pre><code>find /scratch/user/[netID]/gvcfs/ -type f -name &quot;*.vcf.gz&quot; &gt; gvcfs.list</code></pre><p>Then run <code>jg_gatk.sh</code></p>
 <pre><code>#load modules
 module load GCCcore/12.3.0
 module load GATK/4.5.0.0-Java-17
@@ -103,7 +105,6 @@ gatk CombineGVCFs \
 gatk GenotypeGVCFs \
 --java-options &quot;-Xmx16g -XX:ParallelGCThreads=4&quot; \
 -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
---heterozygosity 0.015 \
 --indelHeterozygosity 0.01 \
 -V ${DIR3}/gvcfs/all_${REFERENCE}.g.vcf \
 -O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf</code></pre><h3 id="split-snps-from-indels">Split SNPS from INDELs</h3>
@@ -113,13 +114,13 @@ gatk GenotypeGVCFs \
 --java-options &quot;-Xmx16g -XX:ParallelGCThreads=4&quot; \
 -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
 -V ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf \
--selectType SNP \
+-select-type SNP \
 -O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_SNPs.vcf</code></pre><p>Select Indels:</p>
 <pre><code>gatk SelectVariants \
 --java-options &quot;-Xmx16g -XX:ParallelGCThreads=4&quot; \
 -R /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/${REFERENCE}/${REFERENCE}_genome.fa \
 -V ${DIR}/${USER}/${DIR2}/final_${REFERENCE}.vcf \
--selectType INDEL \
+-select-type INDEL \
 -O ${DIR}/${USER}/${DIR2}/final_${REFERENCE}_INDELs.vcf</code></pre><h3 id="how-many-snps-and-indels-">How many SNPs and INDELs?</h3>
 <pre><code>#load modules
 module purge
