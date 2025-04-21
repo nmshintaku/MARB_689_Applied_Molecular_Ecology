@@ -78,7 +78,7 @@ Once you have run HaplotypeCaller on your cohort of samples, the resulting GVCFs
 
 You will need to make a `gvcfs.list` as so:
 ```
-find /scratch/user/[netID]/gvcfs/ -type f -name "*.vcf.gz" > gvcfs.list
+find /scratch/user/[netID]/gvcfs/ -type f -name "*.vcf" > gvcfs.list
 ```
 
 Then run `jg_gatk.sh`

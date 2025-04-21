@@ -82,7 +82,7 @@ done &lt; SRA.list</code></pre><p>*Note, for low-coverage data, it is recommende
 <h3 id="joint-genotyping-across-samples">Joint genotyping across samples</h3>
 <p>Once you have run HaplotypeCaller on your cohort of samples, the resulting GVCFs need to be combined using CombineGVCFs. GenotypeGVCFs is then used to perform joint genotyping and produce a multi-sample variant call-set from your GVCF files. This tool performs the multi-sample joint aggregation step and merges the records together in a sophisticated manner: at each position of the input gVCFs, this tool will combine all spanning records, produce correct genotype likelihoods, re-genotype the newly merged record, and then re-annotate it.</p>
 <p>You will need to make a <code>gvcfs.list</code> as so:</p>
-<pre><code>find /scratch/user/[netID]/gvcfs/ -type f -name &quot;*.vcf.gz&quot; &gt; gvcfs.list</code></pre><p>Then run <code>jg_gatk.sh</code></p>
+<pre><code>find /scratch/user/[netID]/gvcfs/ -type f -name &quot;*.vcf&quot; &gt; gvcfs.list</code></pre><p>Then run <code>jg_gatk.sh</code></p>
 <pre><code>#load modules
 module load GCCcore/12.3.0
 module load GATK/4.5.0.0-Java-17
