@@ -14,7 +14,7 @@ grep -v "#" Kandelia_obovata.gff3 | sort -k1,1 -k4,4n -k5,5n -t$'\t' | bgzip -c 
 tabix -p gff Kandelia_obovata.gff.gz
 ```
 
-Run VEP on the subset of coral snps:
+Run VEP:
 ```
 vep -i hqfilter_snp_Kandelia_obovata.vcf --format vcf \
 --gff /scratch/group/kitchen-group/MARB_689_Molecular_Ecology/map_reference/Kandelia_obovata/Kandelia_obovata.gff.gz \
